@@ -1,14 +1,119 @@
 <!DOCTYPE html>
-<html lan="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name= "viewport" content="width=device-width, initial-scale= 1.0">
-        <title> KAMIC Student Website</title>
-    
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAMIC Student Website</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- 헤더 및 네비게이션 -->
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <h2>KAMIC Lab</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link">장비</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="equipment-reservation.html">장비예약</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link">실험실</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="msds.html">MSDS</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link">물품 구매</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="hanju.html">한주</a></li>
+                        <li><a href="daewon.html">대원공구</a></li>
+                        <li><a href="argon.html">Ar가스</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <button class="login-btn" onclick="openLoginModal()">로그인</button>
+        </nav>
+    </header>
 
-    </head>
-    <body>
-        <h1>Welcome to KAMIC Student Website!</h1>
-        <p>This is a website for student to reserve equipments or know information our lab</p>
-    </body>
+    <!-- 메인 컨텐츠 -->
+    <main>
+        <!-- 환영 섹션 -->
+        <section class="welcome-section">
+            <h1>Welcome to KAMIC Student Website!</h1>
+            <p>This is a website for students to reserve equipment and access lab information</p>
+        </section>
+
+        <!-- 사진 갤러리 섹션 -->
+        <section class="gallery-section">
+            <h2>연구실 갤러리</h2>
+            <div class="photo-grid">
+                <div class="photo-item">
+                    <img src="images/photo1.jpg" alt="Lab Photo 1">
+                    <p>연구실 전경</p>
+                </div>
+                <div class="photo-item">
+                    <img src="images/photo2.jpg" alt="Lab Photo 2">
+                    <p>실험 장비</p>
+                </div>
+                <div class="photo-item">
+                    <img src="images/photo3.jpg" alt="Lab Photo 3">
+                    <p>팀 활동</p>
+                </div>
+                <div class="photo-item">
+                    <img src="images/photo4.jpg" alt="Lab Photo 4">
+                    <p>세미나</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 퀵 링크 섹션 -->
+        <section class="quick-links">
+            <h2>주요 메뉴</h2>
+            <div class="links-grid">
+                <a href="equipment-reservation.html" class="link-card">
+                    <h3>장비 예약</h3>
+                    <p>실험 장비를 예약하세요</p>
+                </a>
+                <a href="msds.html" class="link-card">
+                    <h3>MSDS</h3>
+                    <p>화학물질 안전자료</p>
+                </a>
+                <a href="hanju.html" class="link-card">
+                    <h3>물품 구매</h3>
+                    <p>실험 물품 구매 신청</p>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- 로그인 모달 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeLoginModal()">&times;</span>
+            <h2>로그인</h2>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="username">아이디:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="submit-btn">로그인</button>
+                <p class="error-message" id="errorMessage"></p>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 KAMIC Lab. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
 </html>
