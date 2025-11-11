@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ar가스 주문 - KAMIC Lab</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* 헤더 스타일 */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .logo h2 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo a {
+            text-decoration: none;
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        /* 메인 컨텐츠 */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-title {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .order-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 3rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .form-group input[type="date"],
+        .form-group input[type="text"],
+        .form-group input[type="number"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .gas-selection-container {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .gas-selection-container > div {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .gas-selection-container > div:last-child {
+            flex: 0 0 auto;
+        }
+
+        .add-gas-btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .add-gas-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .gas-list {
+            margin-top: 1rem;
+        }
+
+        .gas-item {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .gas-item-info {
+            flex: 1;
+        }
+
+        .gas-item-info strong {
+            color: #667eea;
+        }
+
+        .delete-gas-btn {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delete-gas-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .purpose-direct-input {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .purpose-direct-input input {
+            flex: 1;
+        }
+
+        .delivery-date-container {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .delivery-date-container > div {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .delivery-date-container > div:last-child {
+            flex: 0 0 auto;
+        }
+
+        .checkbox-group {
+            margin-top: 1rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 0.5rem;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            margin-top: 2rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .order-list-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 3rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .order-table th,
+        .order-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .order-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .order-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .edit-btn, .delete-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 0.5rem;
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .edit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .admin-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 3rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .admin-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .price-input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .price-input-group label {
+            min-width: 120px;
+            margin-bottom: 0;
+        }
+
+        .price-input-group input {
+            width: 150px;
+            margin-bottom: 0;
+        }
+
+        .save-prices-btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-prices-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .export-btn {
+            padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .payment-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .payment-section h3 {
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+
+        .payment-form {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .payment-form > div {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .payment-form button {
+            flex: 0 0 auto;
+        }
+
+        .add-payment-btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-payment-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .success-message {
+            color: #28a745;
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .no-orders {
+            text-align: center;
+            color: #666;
+            padding: 2rem;
+        }
+
+        /* 로그인 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 3rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            color: #667eea;
+            transform: rotate(90deg);
+        }
+
+        .modal-content h2 {
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .gas-selection-container,
+            .delivery-date-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="index.html"><h2>KAMIC Lab</h2></a>
+            </div>
+            <button class="login-btn" onclick="openLoginModal()">로그인</button>
+        </nav>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <main>
+        <h1 class="page-title">Ar가스 주문</h1>
+
+        <!-- 관리자 모드 -->
+        <div id="adminSection" class="admin-section" style="display: none;">
+            <h2 class="section-title">관리자 모드 - 전체 주문 목록 (1년)</h2>
+            
+            <div class="admin-controls">
+                <button class="export-btn" onclick="exportToExcel()">엑셀로 내보내기</button>
+            </div>
+
+            <div class="payment-section">
+                <h3>소액검수 추가</h3>
+                <div class="payment-form">
+                    <div>
+                        <label>날짜:</label>
+                        <input type="date" id="paymentDate">
+                    </div>
+                    <div>
+                        <label>처리금액:</label>
+                        <input type="number" id="paymentAmount" placeholder="금액 입력">
+                    </div>
+                    <button class="add-payment-btn" onclick="addPayment()">추가</button>
+                </div>
+            </div>
+
+            <div class="price-setting-section">
+                <h3 style="margin-bottom: 1rem; color: #667eea;">가스 가격 설정 (날짜별)</h3>
+                <div class="price-input-group">
+                    <label>적용 시작일:</label>
+                    <input type="date" id="priceDate" required>
+                </div>
+                <div class="price-input-group">
+                    <label>가스 가격:</label>
+                    <input type="number" id="priceArgon47" placeholder="고순도 아르곤(47L) 가격">
+                    <input type="number" id="priceArgonHigh" placeholder="고압 아르곤 가격">
+                    <input type="number" id="priceArgon130" placeholder="액화 아르곤(130L) 가격">
+                    <input type="number" id="priceCO2" placeholder="이산화탄소 가격">
+                    <input type="number" id="priceNitrogen" placeholder="액화질소 가격">
+                    <button class="save-prices-btn" onclick="saveGasPrices()">가격 저장</button>
+                </div>
+                <div id="priceList" style="margin-top: 2rem;">
+                    <h4 style="margin-bottom: 1rem; color: #667eea;">저장된 가격 목록</h4>
+                    <table class="order-table" style="font-size: 0.9rem;">
+                        <thead>
+                            <tr>
+                                <th>적용 시작일</th>
+                                <th>고순도 아르곤(47L)</th>
+                                <th>고압 아르곤</th>
+                                <th>액화 아르곤(130L)</th>
+                                <th>이산화탄소</th>
+                                <th>액화질소</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="priceListBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>주문일</th>
+                        <th>가스종류</th>
+                        <th>개수</th>
+                        <th>사용자</th>
+                        <th>총 금액</th>
+                        <th>미수금액</th>
+                        <th>누적 금액</th>
+                        <th>작업</th>
+                    </tr>
+                </thead>
+                <tbody id="adminOrderList">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 주문 폼 -->
+        <div id="orderFormSection" class="order-section">
+            <h2 class="section-title" id="formTitle">Ar가스 주문</h2>
+            <form id="orderForm" onsubmit="handleOrder(event)">
+                <input type="hidden" id="editingOrderId" value="">
+
+                <div class="form-group">
+                    <label>주문일</label>
+                    <input type="date" id="orderDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label>가스 종류</label>
+                    <div class="gas-selection-container">
+                        <div>
+                            <select id="gasType">
+                                <option value="">가스 종류 선택</option>
+                                <option value="고순도 아르곤(47L/ 날씬이)">고순도 아르곤(47L/ 날씬이)</option>
+                                <option value="고압 아르곤(130L/뚱뚱이)">고압 아르곤(130L/뚱뚱이)</option>
+                                <option value="액화 아르곤(130L/뚱뚱이)">액화 아르곤(130L/뚱뚱이)</option>
+                                <option value="이산화탄소">이산화탄소</option>
+                                <option value="액화질소">액화질소</option>
+                            </select>
+                        </div>
+                        <div>
+                            <input type="number" id="gasQuantity" placeholder="주문량" min="1" value="1">
+                        </div>
+                        <button type="button" class="add-gas-btn" onclick="addGasToList()">추가하기</button>
+                    </div>
+                    <div id="gasList" class="gas-list"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>사용목적</label>
+                    <select id="purpose" onchange="handlePurposeChange()">
+                        <option value="">사용목적 선택</option>
+                        <option value="WAAM">WAAM</option>
+                        <option value="PBD M280">PBD M280</option>
+                        <option value="LP-DED&박스로">LP-DED&박스로</option>
+                        <option value="LW-DED&부품열처리기">LW-DED&부품열처리기</option>
+                        <option value="세포방">세포방</option>
+                        <option value="직접입력">직접입력</option>
+                    </select>
+                    <div id="purposeDirectInput" class="purpose-direct-input" style="display: none;">
+                        <input type="text" id="purposeDirect" placeholder="사용목적을 직접 입력하세요">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>입고예정일</label>
+                    <div class="delivery-date-container">
+                        <div>
+                            <input type="date" id="deliveryDate">
+                        </div>
+                        <div>
+                            <select id="deliveryTime">
+                                <option value="">시간 선택</option>
+                                <option value="오전">오전</option>
+                                <option value="오후">오후</option>
+                            </select>
+                        </div>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="deliveryUnknown" onchange="handleDeliveryUnknown()">
+                                <span>모름</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">주문하기</button>
+                <button type="button" class="submit-btn" id="cancelEditBtn" onclick="cancelEdit()" style="display: none; margin-top: 1rem; background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);">취소</button>
+                <p id="orderMessage" class="error-message" style="display: none;"></p>
+            </form>
+        </div>
+
+        <!-- 주문 목록 -->
+        <div class="order-list-section">
+            <h2 class="section-title">내 주문 목록 (최근 1개월)</h2>
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>주문일</th>
+                        <th>가스종류</th>
+                        <th>개수</th>
+                        <th>사용자</th>
+                        <th>사용목적</th>
+                        <th>입고예정일</th>
+                        <th>작업</th>
+                    </tr>
+                </thead>
+                <tbody id="myOrderList">
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- 로그인 모달 -->
+    <div id="loginModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeLoginModal()">&times;</span>
+            <h2>로그인</h2>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="username">아이디:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe" name="rememberMe">
+                        <span>로그인 유지</span>
+                    </label>
+                </div>
+                <button type="submit" class="submit-btn">로그인</button>
+                <p class="error-message" id="errorMessage"></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="users-config.js"></script>
+    <script src="script.js"></script>
+    <script src="argon.js"></script>
+</body>
+</html>
+
