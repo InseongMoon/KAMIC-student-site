@@ -26,8 +26,8 @@ const USERS = {
     '박진수': 'qkrwlstn1!',
     '서지현': 'tjwlgus1!',
     '송경조': 'thdrudwh1!',
-    '안소희': 'dksthgml1!',
     '양승원': 'didtmddnjs1!',
+    '옥준혁': 'dhrwnsgur1!',
     '이민정': 'dlalswjd1!',
     '이승호': 'dltmdgh!',
     '이재향': 'dlwogid1!',
@@ -75,3 +75,75 @@ const USERS = {
 // 이 파일을 script.js에서 사용하려면
 // index.html의 <script src="script.js"></script> 앞에
 // <script src="users-config.js"></script>를 추가하세요
+
+/**
+ * 연구실 멤버 생일 데이터
+ * 
+ * 형식: { name: '이름', birthday: 'MM-DD', photo: '사진경로' }
+ * - birthday: 월-일 형식 (예: '01-15' = 1월 15일)
+ * - photo: images/birthdays/ 폴더 내 사진 파일명
+ */
+const BIRTHDAYS = [
+    // 1월
+    { name: '서지현', birthday: '01-05', photo: 'images/birthdays/jihyun.jpg' },
+    { name: '차영환', birthday: '01-09', photo: 'images/birthdays/youngwhan.jpg' },
+    { name: '황성연', birthday: '01-17', photo: 'images/birthdays/sungyeon.jpg' },
+    { name: '문인성', birthday: '01-22', photo: 'images/birthdays/inseong.png' },
+    
+    // 2월
+    { name: '지성훈', birthday: '02-09', photo: 'images/birthdays/sunghun.jpg' },
+    { name: '김영경', birthday: '02-19', photo: 'images/birthdays/younggyung.jpg' },
+    
+    // 3월
+    { name: '노현철', birthday: '03-01', photo: 'images/birthdays/hyuncheol.jpg' },
+    { name: '임하은', birthday: '03-10', photo: 'images/birthdays/haeun.jpg' },
+    { name: '송경조', birthday: '03-17', photo: 'images/birthdays/gyeongjo.jpg' },
+    
+    // 4월
+    { name: '박진수', birthday: '04-03', photo: 'images/birthdays/jinsu.jpg' },
+    
+    // 5월
+    { name: '조윤화', birthday: '05-05', photo: 'images/birthdays/yoonwha.jpg' },
+    { name: '이재향', birthday: '05-27', photo: 'images/birthdays/jaehyang.jpg' },
+    
+    // 6월
+    { name: '김민호', birthday: '06-21', photo: 'images/birthdays/minho.jpg' },
+    
+    // 7월
+    { name: '양승원', birthday: '07-13', photo: 'images/birthdays/seungwon.jpg' },
+    
+    // 8월
+    
+    
+    // 9월
+    { name: '최재원', birthday: '09-10', photo: 'images/birthdays/jaewon.jpg' },
+    { name: '김태협', birthday: '09-18', photo: 'images/birthdays/taehyub.jpg' },
+    { name: '이지은', birthday: '09-19', photo: 'images/birthdays/jieun.jpg' },
+    { name: '노승범', birthday: '09-24', photo: 'images/birthdays/seungbum.jpg' },
+    
+    // 10월
+    { name: '한지수', birthday: '10-24', photo: 'images/birthdays/jisu.jpg' },
+    { name: '김상현', birthday: '10-31', photo: 'images/birthdays/sanghyun.jpg' },
+    
+    // 11월
+    { name: '노재일', birthday: '11-18', photo: 'images/birthdays/jaeil.jpg' },
+    { name: '이민정', birthday: '11-20', photo: 'images/birthdays/minjung.jpg' },
+    
+    // 12월
+    { name: '이승호', birthday: '12-16', photo: 'images/birthdays/seungho.jpg' },
+    
+    // 여러 명 예시 (같은 월에 여러 명 가능)
+    // { name: '김민호', birthday: '01-20', photo: 'images/birthdays/minho.jpg' },
+];
+
+/**
+ * 생일 데이터 추가 방법:
+ * 
+ * 1. 위의 BIRTHDAYS 배열에 다음 형식으로 추가:
+ *    { name: '이름', birthday: 'MM-DD', photo: 'images/birthdays/파일명.jpg' },
+ * 
+ * 2. 사진 파일은 images/birthdays/ 폴더에 저장
+ * 
+ * 3. 예시:
+ *    { name: '김민호', birthday: '03-15', photo: 'images/birthdays/minho.jpg' },
+ */

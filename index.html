@@ -587,6 +587,301 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* 생일 섹션 스타일 */
+        .birthday-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 3rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .birthday-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .birthday-section h2::before {
+            content: '🎂 ';
+            -webkit-text-fill-color: initial;
+        }
+
+        .birthday-section h2::after {
+            content: ' 🎉';
+            -webkit-text-fill-color: initial;
+        }
+
+        /* 월별 그리드 (4x3) */
+        .birthday-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .month-card {
+            background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            min-height: 180px;
+        }
+
+        .month-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .month-card h3 {
+            font-size: 1.2rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+            text-align: center;
+        }
+
+        .month-members {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .member-item:hover {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+        }
+
+        .member-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #667eea;
+        }
+
+        .member-info {
+            flex: 1;
+        }
+
+        .member-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .member-date {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .no-birthday {
+            text-align: center;
+            color: #aaa;
+            font-style: italic;
+            padding: 1rem;
+        }
+
+        /* 오늘 생일자 특별 섹션 */
+        .today-birthday-section {
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(255, 107, 107, 0.3);
+            margin-bottom: 3rem;
+            text-align: center;
+            animation: birthdayGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes birthdayGlow {
+            0%, 100% {
+                box-shadow: 0 10px 40px rgba(255, 107, 107, 0.3);
+            }
+            50% {
+                box-shadow: 0 15px 50px rgba(255, 107, 107, 0.5);
+            }
+        }
+
+        .today-birthday-section h2 {
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .today-birthday-section h2::before,
+        .today-birthday-section h2::after {
+            content: none;
+        }
+
+        .today-birthday-container {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .today-birthday-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: bounceIn 0.6s ease;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .today-birthday-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #ff6b6b;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .today-birthday-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .today-birthday-message {
+            color: #ff6b6b;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* 색종이 떨어지는 애니메이션 - 왼쪽으로 흔들리며 */
+        @keyframes confettiFallLeft {
+            0% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+            25% {
+                transform: translateY(25vh) translateX(-30px) rotate(180deg);
+            }
+            50% {
+                transform: translateY(50vh) translateX(20px) rotate(360deg);
+            }
+            75% {
+                transform: translateY(75vh) translateX(-40px) rotate(540deg);
+            }
+            100% {
+                transform: translateY(105vh) translateX(10px) rotate(720deg);
+                opacity: 0.3;
+            }
+        }
+
+        /* 색종이 떨어지는 애니메이션 - 오른쪽으로 흔들리며 */
+        @keyframes confettiFallRight {
+            0% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+            25% {
+                transform: translateY(25vh) translateX(30px) rotate(-180deg);
+            }
+            50% {
+                transform: translateY(50vh) translateX(-20px) rotate(-360deg);
+            }
+            75% {
+                transform: translateY(75vh) translateX(40px) rotate(-540deg);
+            }
+            100% {
+                transform: translateY(105vh) translateX(-10px) rotate(-720deg);
+                opacity: 0.3;
+            }
+        }
+
+        /* 음악 버튼 펄스 애니메이션 */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 6px 30px rgba(255, 107, 107, 0.6);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
+            }
+        }
+
+        /* 폭죽 파편 스타일 */
+        .firework-particle {
+            transform-origin: center center;
+        }
+
+        /* 색종이 스타일 (JavaScript에서 생성) */
+        .confetti {
+            position: fixed;
+            top: -20px;
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        /* 반응형 생일 그리드 */
+        @media (max-width: 1200px) {
+            .birthday-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .birthday-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .birthday-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .today-birthday-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -630,13 +925,88 @@
             <p>장비 예약, 실험실 정보, 물품 구매 등 연구실 관련 예약 및 관리 용도</p>
         </section>
 
+        <!-- 오늘 생일자 섹션 (생일 당일에만 표시) -->
+        <section class="today-birthday-section" id="todayBirthdaySection" style="display: none;">
+            <h2>🎂 오늘의 생일자 🎉</h2>
+            <div class="today-birthday-container" id="todayBirthdayContainer">
+                <!-- JavaScript로 동적 생성 -->
+            </div>
+        </section>
+
+        <!-- 생일 캘린더 섹션 (로그인 후 표시, 생일 당일엔 숨김) -->
+        <section class="birthday-section" id="birthdaySection" style="display: none;">
+            <h2>생일</h2>
+            <div class="birthday-grid" id="birthdayGrid">
+                <!-- 1월 -->
+                <div class="month-card" data-month="1">
+                    <h3>1월</h3>
+                    <div class="month-members"></div>
+                </div>
+                <!-- 2월 -->
+                <div class="month-card" data-month="2">
+                    <h3>2월</h3>
+                    <div class="month-members"></div>
+                </div>
+                <!-- 3월 -->
+                <div class="month-card" data-month="3">
+                    <h3>3월</h3>
+                    <div class="month-members"></div>
+                </div>
+                <!-- 4월 -->
+                <div class="month-card" data-month="4">
+                    <h3>4월</h3>
+                    <div class="month-members"></div>
+                </div>
+                <!-- 5월 -->
+                <div class="month-card" data-month="5">
+                    <h3>5월</h3>
+                    <div class="month-members"></div>
+                </div>
+                <!-- 6월 -->
+                <div class="month-card" data-month="6">
+                    <h3>6월</h3>
+                    <div class="month-members"></div>
+                </div>
+                <!-- 7월 -->
+                <div class="month-card" data-month="7">
+                    <h3>7월</h3>
+                    <div class="month-members"></div>
+                </div>
+                <!-- 8월 -->
+                <div class="month-card" data-month="8">
+                    <h3>8월</h3>
+                    <div class="month-members"></div>
+                </div>
+                <!-- 9월 -->
+                <div class="month-card" data-month="9">
+                    <h3>9월</h3>
+                    <div class="month-members"></div>
+                </div>
+                <!-- 10월 -->
+                <div class="month-card" data-month="10">
+                    <h3>10월</h3>
+                    <div class="month-members"></div>
+                </div>
+                <!-- 11월 -->
+                <div class="month-card" data-month="11">
+                    <h3>11월</h3>
+                    <div class="month-members"></div>
+                </div>
+                <!-- 12월 -->
+                <div class="month-card" data-month="12">
+                    <h3>12월</h3>
+                    <div class="month-members"></div>
+                </div>
+            </div>
+        </section>
+
         <!-- 사진 갤러리 섹션 -->
         <section class="gallery-section" id="gallerySection" style="display: none;">
             <h2>연구실 갤러리</h2>
             <div class="gallery-container">
                 <div class="gallery-row">
                     <div class="photo-item">
-                        <img src="images/image1.JPG" alt="Lab Photo 1" class="gallery-media">
+                        <img src="images/image1.jpg" alt="Lab Photo 1" class="gallery-media">
                     </div>
                     <div class="photo-item">
                         <img src="images/image2.jpg" alt="Lab Photo 2" class="gallery-media">
@@ -767,7 +1137,7 @@
     </div>
 
     <footer>
-        <p>&copy; 2025 KAMIC Lab. All rights reserved.</p>
+        <p>&copy; KAMIC Lab. All rights reserved.</p>
     </footer>
 
     <script src="users-config.js"></script>
