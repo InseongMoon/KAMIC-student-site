@@ -641,3 +641,13 @@ function openPurchaseModal() {
 function closePurchaseModal() {
     document.getElementById('purchaseModal').style.display = 'none';
 }
+
+// PDF 병합 페이지로 이동 (로그인 체크)
+function goToPdfMerge() {
+    if (!isLoggedIn) {
+        alert('PDF 병합 기능을 사용하려면 로그인이 필요합니다.');
+        openLoginModal();
+        return;
+    }
+    window.location.href = 'pdf-merge.html';
+}

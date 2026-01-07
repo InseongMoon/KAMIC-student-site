@@ -16,15 +16,11 @@ const USERS = {
     
     // 학생 계정들
     '김민호': 'rlaalsgh1!',
-    '김상현': 'rlatkdgus1!',
     '김영경': 'rladudrud1!',
-    '김태협': 'rlaxoguq1!',
     '노승범': 'shtmdqja1!',
     '노재일': 'shwodlf1!',
-    '노현철': 'shguscjf1!',
     '문인성': 'ansdlstjd1!',
     '박진수': 'qkrwlstn1!',
-    '서지현': 'tjwlgus1!',
     '송경조': 'thdrudwh1!',
     '양승원': 'didtmddnjs1!',
     '옥준혁': 'dhrwnsgur1!',
@@ -85,7 +81,6 @@ const USERS = {
  */
 const BIRTHDAYS = [
     // 1월
-    { name: '서지현', birthday: '01-05', photo: 'images/birthdays/jihyun.jpg' },
     { name: '차영환', birthday: '01-09', photo: 'images/birthdays/youngwhan.jpg' },
     { name: '황성연', birthday: '01-17', photo: 'images/birthdays/sungyeon.jpg' },
     { name: '문인성', birthday: '01-22', photo: 'images/birthdays/inseong.png' },
@@ -95,7 +90,6 @@ const BIRTHDAYS = [
     { name: '김영경', birthday: '02-19', photo: 'images/birthdays/younggyung.jpg' },
     
     // 3월
-    { name: '노현철', birthday: '03-01', photo: 'images/birthdays/hyuncheol.jpg' },
     { name: '임하은', birthday: '03-10', photo: 'images/birthdays/haeun.jpg' },
     { name: '송경조', birthday: '03-17', photo: 'images/birthdays/gyeongjo.jpg' },
     
@@ -117,13 +111,11 @@ const BIRTHDAYS = [
     
     // 9월
     { name: '최재원', birthday: '09-10', photo: 'images/birthdays/jaewon.jpg' },
-    { name: '김태협', birthday: '09-18', photo: 'images/birthdays/taehyub.jpg' },
     { name: '이지은', birthday: '09-19', photo: 'images/birthdays/jieun.jpg' },
     { name: '노승범', birthday: '09-24', photo: 'images/birthdays/seungbum.jpg' },
     
     // 10월
     { name: '한지수', birthday: '10-24', photo: 'images/birthdays/jisu.jpg' },
-    { name: '김상현', birthday: '10-31', photo: 'images/birthdays/sanghyun.jpg' },
     
     // 11월
     { name: '노재일', birthday: '11-18', photo: 'images/birthdays/jaeil.jpg' },

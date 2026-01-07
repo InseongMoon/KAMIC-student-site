@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 병합 - KAMIC Lab</title>
+    <!-- PDF.js for rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- pdf-lib for merging -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <!-- Sortable.js for drag and drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e4e4e7;
+        }
+
+        /* 헤더 */
+        header {
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo h2 {
+            background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo h2 a {
+            text-decoration: none;
+            background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-title::before {
+            content: '📄';
+            font-size: 1.6rem;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #7c3aed 0%, #00d4ff 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+        }
+
+        /* 메인 컨텐츠 */
+        main {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* 도구바 */
+        .toolbar {
+            background: rgba(30, 30, 60, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .view-toggle {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .view-btn {
+            background: transparent;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            color: #a1a1aa;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .view-btn.active {
+            background: linear-gradient(135deg, #7c3aed 0%, #00d4ff 100%);
+            color: white;
+        }
+
+        .view-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .compression-select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .compression-select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .action-btn.danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .action-btn.danger:hover:not(:disabled) {
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        /* 업로드 영역 */
+        .upload-area {
+            background: rgba(30, 30, 60, 0.6);
+            border: 3px dashed rgba(124, 58, 237, 0.5);
+            border-radius: 24px;
+            padding: 4rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+
+        .upload-area:hover,
+        .upload-area.drag-over {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+            transform: scale(1.01);
+        }
+
+        .upload-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .upload-area h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-area p {
+            color: #a1a1aa;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #7c3aed 0%, #00d4ff 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.5);
+        }
+
+        .supported-formats {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .format-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #d4d4d8;
+        }
+
+        /* 파일 목록 컨테이너 */
+        .files-container {
+            background: rgba(30, 30, 60, 0.6);
+            border-radius: 24px;
+            padding: 1.5rem;
+            min-height: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .files-count {
+            font-size: 1rem;
+            color: #a1a1aa;
+        }
+
+        .files-count span {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        /* 파일 모드 */
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .file-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: grab;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .file-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(124, 58, 237, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .file-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .file-card .thumbnail {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-card .thumbnail img,
+        .file-card .thumbnail canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .file-card .file-icon {
+            font-size: 4rem;
+        }
+
+        .file-card .file-info {
+            padding: 1rem;
+        }
+
+        .file-card .file-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #fff;
+            margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-card .file-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #a1a1aa;
+        }
+
+        .file-card .remove-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.9);
+            border: none;
+            color: white;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .file-card:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .file-card .remove-btn:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .file-card .order-badge {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7c3aed 0%, #00d4ff 100%);
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 페이지 모드 */
+        .pages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .page-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: grab;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .page-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .page-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .page-card .page-thumbnail {
+            width: 100%;
+            height: 180px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-card .page-thumbnail canvas,
+        .page-card .page-thumbnail img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .page-card .page-info {
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        .page-card .page-number {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #00d4ff;
+        }
+
+        .page-card .page-source {
+            font-size: 0.75rem;
+            color: #71717a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .page-card .remove-btn {
+            position: absolute;
+            top: 0.3rem;
+            right: 0.3rem;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.9);
+            border: none;
+            color: white;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .page-card:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .page-card .order-badge {
+            position: absolute;
+            top: 0.3rem;
+            left: 0.3rem;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 100%);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #71717a;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* 프로그레스 바 */
+        .progress-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .progress-overlay.show {
+            display: flex;
+        }
+
+        .progress-card {
+            background: rgba(30, 30, 60, 0.95);
+            border-radius: 24px;
+            padding: 3rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-card h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            color: #fff;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 12px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar .progress {
+            height: 100%;
+            background: linear-gradient(135deg, #7c3aed 0%, #00d4ff 100%);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            color: #a1a1aa;
+            font-size: 0.9rem;
+        }
+
+        /* 로딩 스피너 */
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 푸터 */
+        footer {
+            background: rgba(15, 15, 35, 0.95);
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 3rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        footer p {
+            color: #71717a;
+            font-size: 0.9rem;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .upload-area {
+                padding: 2rem 1rem;
+            }
+
+            .upload-icon {
+                font-size: 3rem;
+            }
+
+            .upload-area h3 {
+                font-size: 1.3rem;
+            }
+
+            .files-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .pages-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+
+        /* 토스트 알림 */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .toast {
+            background: rgba(30, 30, 60, 0.95);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            animation: slideIn 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toast.success {
+            border-left: 4px solid #10b981;
+        }
+
+        .toast.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .toast.info {
+            border-left: 4px solid #00d4ff;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* 숨김 처리 */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <h2><a href="index.html">KAMIC Lab</a></h2>
+            </div>
+            <div class="nav-title">PDF 병합 도구</div>
+            <a href="index.html" class="back-btn">← 홈으로</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- 도구바 -->
+        <div class="toolbar">
+            <div class="view-toggle">
+                <button class="view-btn active" data-view="file" onclick="switchView('file')">📁 파일</button>
+                <button class="view-btn" data-view="page" onclick="switchView('page')">📄 페이지</button>
+            </div>
+            <div class="toolbar-actions">
+                <select class="compression-select" id="compressionLevel">
+                    <option value="none">압축 없음 (원본 품질)</option>
+                    <option value="low">낮은 압축 (고품질)</option>
+                    <option value="medium">중간 압축 (균형)</option>
+                    <option value="high">높은 압축 (작은 크기)</option>
+                </select>
+                <button class="action-btn danger" onclick="clearAll()" id="clearBtn" disabled>
+                    🗑️ 전체 삭제
+                </button>
+                <button class="action-btn" onclick="mergeAndDownload()" id="mergeBtn" disabled>
+                    ⬇️ 병합 및 다운로드
+                </button>
+            </div>
+        </div>
+
+        <!-- 업로드 영역 -->
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📎</div>
+            <h3>파일을 드래그하거나 클릭하여 업로드</h3>
+            <p>여러 파일을 한 번에 선택하거나 드래그할 수 있습니다</p>
+            <button class="upload-btn" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">
+                파일 선택
+            </button>
+            <div class="supported-formats">
+                <span class="format-badge">PDF</span>
+                <span class="format-badge">JPG</span>
+                <span class="format-badge">PNG</span>
+                <span class="format-badge">GIF</span>
+                <span class="format-badge">WEBP</span>
+                <span class="format-badge">Word (DOCX)</span>
+                <span class="format-badge">Excel (XLSX)</span>
+            </div>
+            <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx" style="display: none">
+        </div>
+
+        <!-- 파일/페이지 목록 -->
+        <div class="files-container" id="filesContainer">
+            <div class="files-header">
+                <div class="files-count">
+                    <span id="fileCount">0</span>개 파일 · <span id="pageCount">0</span>개 페이지
+                </div>
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                    + 파일 추가
+                </button>
+            </div>
+            
+            <!-- 파일 뷰 -->
+            <div class="files-grid" id="filesGrid">
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">📂</div>
+                    <p>파일을 추가해주세요</p>
+                </div>
+            </div>
+
+            <!-- 페이지 뷰 -->
+            <div class="pages-grid hidden" id="pagesGrid">
+                <div class="empty-state" id="emptyStatePages">
+                    <div class="empty-icon">📄</div>
+                    <p>페이지가 없습니다</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 프로그레스 오버레이 -->
+    <div class="progress-overlay" id="progressOverlay">
+        <div class="progress-card">
+            <div class="spinner"></div>
+            <h3 id="progressTitle">처리 중...</h3>
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+            <p class="progress-text" id="progressText">0%</p>
+        </div>
+    </div>
+
+    <!-- 토스트 컨테이너 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <footer>
+        <p>&copy; KAMIC Lab. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // PDF.js 워커 설정
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // 전역 상태
+        let files = []; // { id, name, type, data, pages: [{pageNum, thumbnail}] }
+        let allPages = []; // { id, fileId, fileName, pageNum, thumbnail, data }
+        let currentView = 'file';
+        let fileIdCounter = 0;
+        let pageIdCounter = 0;
+
+        // DOM 요소
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const filesGrid = document.getElementById('filesGrid');
+        const pagesGrid = document.getElementById('pagesGrid');
+        const emptyState = document.getElementById('emptyState');
+        const emptyStatePages = document.getElementById('emptyStatePages');
+        const progressOverlay = document.getElementById('progressOverlay');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const progressTitle = document.getElementById('progressTitle');
+
+        // Sortable 인스턴스
+        let fileSortable, pageSortable;
+
+        // 로그인 상태 확인
+        function checkLoginStatus() {
+            let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || 
+                             sessionStorage.getItem('isLoggedIn') === 'true';
+            
+            if (!isLoggedIn) {
+                alert('이 기능을 사용하려면 로그인이 필요합니다.');
+                window.location.href = 'index.html';
+                return false;
+            }
+            return true;
+        }
+
+        // 초기화
+        function init() {
+            // 로그인 체크
+            if (!checkLoginStatus()) return;
+            
+            setupDragAndDrop();
+            setupFileInput();
+            setupSortable();
+        }
+
+        // 드래그 앤 드롭 설정
+        function setupDragAndDrop() {
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.add('drag-over');
+            });
+
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.remove('drag-over');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.remove('drag-over');
+                
+                const files = e.dataTransfer?.files;
+                if (files && files.length > 0) {
+                    handleFiles(files);
+                }
+            });
+
+            // 전체 페이지 드래그 앤 드롭
+            document.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            document.addEventListener('drop', (e) => {
+                e.preventDefault();
+                // 업로드 영역에서 이미 처리했으면 무시
+                if (e.target.closest('.upload-area')) {
+                    return;
+                }
+                
+                const droppedFiles = e.dataTransfer?.files;
+                if (droppedFiles && droppedFiles.length > 0 && e.target.closest('.files-container')) {
+                    handleFiles(droppedFiles);
+                }
+            });
+        }
+
+        // 파일 입력 설정
+        function setupFileInput() {
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+                fileInput.value = '';
+            });
+        }
+
+        // Sortable.js 설정
+        function setupSortable() {
+            fileSortable = new Sortable(filesGrid, {
+                animation: 200,
+                ghostClass: 'dragging',
+                filter: '.empty-state',
+                onEnd: (evt) => {
+                    const oldIndex = evt.oldIndex;
+                    const newIndex = evt.newIndex;
+                    if (oldIndex !== newIndex) {
+                        const [movedFile] = files.splice(oldIndex, 1);
+                        files.splice(newIndex, 0, movedFile);
+                        rebuildAllPages();
+                        updateOrderBadges();
+                    }
+                }
+            });
+
+            pageSortable = new Sortable(pagesGrid, {
+                animation: 200,
+                ghostClass: 'dragging',
+                filter: '.empty-state',
+                onEnd: (evt) => {
+                    const oldIndex = evt.oldIndex;
+                    const newIndex = evt.newIndex;
+                    if (oldIndex !== newIndex) {
+                        const [movedPage] = allPages.splice(oldIndex, 1);
+                        allPages.splice(newIndex, 0, movedPage);
+                        updatePageOrderBadges();
+                    }
+                }
+            });
+        }
+
+        // 파일 유효성 검사
+        function isValidFile(file) {
+            // 확장자 검사
+            const fileName = file.name || '';
+            const ext = fileName.toLowerCase().split('.').pop();
+            const validExts = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'doc', 'docx', 'xls', 'xlsx'];
+            
+            // MIME 타입 검사
+            const validMimes = [
+                'application/pdf',
+                'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+                'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            ];
+            
+            const extValid = validExts.includes(ext);
+            const mimeValid = validMimes.includes(file.type);
+            
+            // 확장자 또는 MIME 타입 중 하나라도 유효하면 통과
+            return extValid || mimeValid;
+        }
+
+        // 파일 처리
+        async function handleFiles(fileList) {
+            if (!fileList || fileList.length === 0) {
+                showToast('파일을 선택해주세요.', 'error');
+                return;
+            }
+
+            const allFiles = Array.from(fileList);
+            const validFiles = allFiles.filter(file => isValidFile(file));
+            const invalidCount = allFiles.length - validFiles.length;
+
+            if (validFiles.length === 0) {
+                showToast('지원하지 않는 파일 형식입니다. (PDF, 이미지, Word, Excel 파일만 지원)', 'error');
+                return;
+            }
+
+            if (invalidCount > 0) {
+                showToast(`${invalidCount}개 파일은 지원하지 않는 형식입니다.`, 'info');
+            }
+
+            showProgress('파일 로딩 중...', 0);
+
+            let successCount = 0;
+            for (let i = 0; i < validFiles.length; i++) {
+                const file = validFiles[i];
+                const progress = ((i + 1) / validFiles.length) * 100;
+                updateProgress(progress, `${file.name} 처리 중...`);
+                
+                try {
+                    await processFile(file);
+                    successCount++;
+                } catch (error) {
+                    console.error('파일 처리 오류:', error);
+                    showToast(`${file.name} 처리 중 오류가 발생했습니다: ${error.message}`, 'error');
+                }
+            }
+
+            hideProgress();
+            updateUI();
+            
+            if (successCount > 0) {
+                showToast(`${successCount}개 파일이 추가되었습니다.`, 'success');
+            }
+        }
+
+        // ArrayBuffer 복사 함수
+        function copyArrayBuffer(buffer) {
+            const copy = new ArrayBuffer(buffer.byteLength);
+            new Uint8Array(copy).set(new Uint8Array(buffer));
+            return copy;
+        }
+
+        // 개별 파일 처리
+        async function processFile(file) {
+            const fileName = file.name || 'unknown';
+            const ext = fileName.toLowerCase().split('.').pop();
+            
+            // MIME 타입으로 파일 종류 추론
+            let fileType = ext;
+            if (file.type === 'application/pdf') fileType = 'pdf';
+            else if (file.type.startsWith('image/')) {
+                if (file.type === 'image/jpeg') fileType = 'jpg';
+                else if (file.type === 'image/png') fileType = 'png';
+                else if (file.type === 'image/gif') fileType = 'gif';
+                else if (file.type === 'image/webp') fileType = 'webp';
+            }
+            
+            let arrayBuffer;
+            try {
+                arrayBuffer = await file.arrayBuffer();
+            } catch (e) {
+                throw new Error('파일을 읽을 수 없습니다.');
+            }
+            
+            // ArrayBuffer 복사본 저장 (재사용을 위해)
+            const dataCopy = copyArrayBuffer(arrayBuffer);
+            
+            const fileData = {
+                id: ++fileIdCounter,
+                name: fileName,
+                type: fileType,
+                size: file.size,
+                data: dataCopy,
+                pages: []
+            };
+
+            if (fileType === 'pdf') {
+                await processPDF(fileData, copyArrayBuffer(dataCopy));
+            } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileType)) {
+                await processImage(fileData, copyArrayBuffer(dataCopy), file.type || `image/${fileType}`);
+            } else if (['doc', 'docx', 'xls', 'xlsx'].includes(fileType)) {
+                await processOfficeFile(fileData, file);
+            } else {
+                throw new Error(`지원하지 않는 파일 형식: ${fileType}`);
+            }
+
+            files.push(fileData);
+            rebuildAllPages();
+        }
+
+        // PDF 처리
+        async function processPDF(fileData, arrayBuffer) {
+            let pdf;
+            try {
+                // ArrayBuffer를 Uint8Array로 변환
+                const uint8Array = new Uint8Array(arrayBuffer);
+                pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
+            } catch (e) {
+                console.error('PDF 로드 오류:', e);
+                throw new Error('PDF 파일을 읽을 수 없습니다. 파일이 손상되었거나 암호화되어 있을 수 있습니다.');
+            }
+            
+            const numPages = pdf.numPages;
+
+            for (let i = 1; i <= numPages; i++) {
+                try {
+                    const page = await pdf.getPage(i);
+                    const scale = 0.5;
+                    const viewport = page.getViewport({ scale });
+
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+
+                    fileData.pages.push({
+                        pageNum: i,
+                        thumbnail: canvas.toDataURL('image/jpeg', 0.7)
+                    });
+                } catch (pageError) {
+                    console.error(`페이지 ${i} 렌더링 오류:`, pageError);
+                    // 페이지 렌더링 실패해도 계속 진행, 빈 썸네일 추가
+                    fileData.pages.push({
+                        pageNum: i,
+                        thumbnail: createErrorThumbnail(i)
+                    });
+                }
+            }
+            
+            if (fileData.pages.length === 0) {
+                throw new Error('PDF에서 페이지를 추출할 수 없습니다.');
+            }
+        }
+        
+        // 오류 썸네일 생성
+        function createErrorThumbnail(pageNum) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 280;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#2d2d44';
+            ctx.fillRect(0, 0, 200, 280);
+            ctx.font = '60px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('📄', 100, 100);
+            ctx.font = '14px sans-serif';
+            ctx.fillStyle = '#a1a1aa';
+            ctx.fillText(`페이지 ${pageNum}`, 100, 180);
+            ctx.fillText('(미리보기 불가)', 100, 200);
+            
+            return canvas.toDataURL('image/png');
+        }
+
+        // 이미지 처리
+        async function processImage(fileData, arrayBuffer, mimeType) {
+            const blob = new Blob([arrayBuffer], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+
+            const img = new Image();
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = url;
+            });
+
+            const canvas = document.createElement('canvas');
+            const maxSize = 300;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > maxSize) {
+                    height = (height / width) * maxSize;
+                    width = maxSize;
+                }
+            } else {
+                if (height > maxSize) {
+                    width = (width / height) * maxSize;
+                    height = maxSize;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            fileData.pages.push({
+                pageNum: 1,
+                thumbnail: canvas.toDataURL('image/jpeg', 0.7),
+                originalWidth: img.width,
+                originalHeight: img.height
+            });
+
+            URL.revokeObjectURL(url);
+        }
+
+        // Office 파일 처리 (Word, Excel)
+        async function processOfficeFile(fileData, file) {
+            // Word/Excel은 브라우저에서 직접 PDF 변환이 어려움
+            // 아이콘만 표시하고 병합 시 처리
+            const ext = file.name.toLowerCase().split('.').pop();
+            let icon = '📄';
+            
+            if (['doc', 'docx'].includes(ext)) {
+                icon = '📝';
+            } else if (['xls', 'xlsx'].includes(ext)) {
+                icon = '📊';
+            }
+
+            // 썸네일 대신 아이콘 표시
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 200;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, 200, 200);
+            ctx.font = '80px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(icon, 100, 90);
+            ctx.font = '14px sans-serif';
+            ctx.fillStyle = '#a1a1aa';
+            ctx.fillText(ext.toUpperCase(), 100, 160);
+
+            fileData.pages.push({
+                pageNum: 1,
+                thumbnail: canvas.toDataURL('image/png'),
+                isOffice: true
+            });
+
+            showToast(`${ext.toUpperCase()} 파일은 이미지로 변환되어 병합됩니다.`, 'info');
+        }
+
+        // 전체 페이지 목록 재구성
+        function rebuildAllPages() {
+            allPages = [];
+            files.forEach(file => {
+                file.pages.forEach((page, idx) => {
+                    allPages.push({
+                        id: ++pageIdCounter,
+                        fileId: file.id,
+                        fileName: file.name,
+                        fileType: file.type,
+                        pageNum: page.pageNum,
+                        thumbnail: page.thumbnail,
+                        originalWidth: page.originalWidth,
+                        originalHeight: page.originalHeight,
+                        isOffice: page.isOffice
+                    });
+                });
+            });
+        }
+
+        // UI 업데이트
+        function updateUI() {
+            updateFileCount();
+            renderFiles();
+            renderPages();
+            updateButtons();
+        }
+
+        // 파일 수 업데이트
+        function updateFileCount() {
+            document.getElementById('fileCount').textContent = files.length;
+            document.getElementById('pageCount').textContent = allPages.length;
+        }
+
+        // 파일 렌더링
+        function renderFiles() {
+            filesGrid.innerHTML = '';
+
+            if (files.length === 0) {
+                filesGrid.innerHTML = `
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-icon">📂</div>
+                        <p>파일을 추가해주세요</p>
+                    </div>
+                `;
+                return;
+            }
+
+            files.forEach((file, index) => {
+                const card = document.createElement('div');
+                card.className = 'file-card';
+                card.dataset.id = file.id;
+
+                const thumbnail = file.pages[0]?.thumbnail || '';
+                const pageCount = file.pages.length;
+                const fileSize = formatFileSize(file.size);
+
+                card.innerHTML = `
+                    <span class="order-badge">${index + 1}</span>
+                    <button class="remove-btn" onclick="removeFile(${file.id})">×</button>
+                    <div class="thumbnail">
+                        ${thumbnail ? `<img src="${thumbnail}" alt="${file.name}">` : `<span class="file-icon">📄</span>`}
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name" title="${file.name}">${file.name}</div>
+                        <div class="file-meta">
+                            <span>${pageCount}페이지</span>
+                            <span>${fileSize}</span>
+                        </div>
+                    </div>
+                `;
+
+                filesGrid.appendChild(card);
+            });
+        }
+
+        // 페이지 렌더링
+        function renderPages() {
+            pagesGrid.innerHTML = '';
+
+            if (allPages.length === 0) {
+                pagesGrid.innerHTML = `
+                    <div class="empty-state" id="emptyStatePages">
+                        <div class="empty-icon">📄</div>
+                        <p>페이지가 없습니다</p>
+                    </div>
+                `;
+                return;
+            }
+
+            allPages.forEach((page, index) => {
+                const card = document.createElement('div');
+                card.className = 'page-card';
+                card.dataset.id = page.id;
+
+                card.innerHTML = `
+                    <span class="order-badge">${index + 1}</span>
+                    <button class="remove-btn" onclick="removePage(${page.id})">×</button>
+                    <div class="page-thumbnail">
+                        <img src="${page.thumbnail}" alt="Page ${page.pageNum}">
+                    </div>
+                    <div class="page-info">
+                        <div class="page-number">페이지 ${page.pageNum}</div>
+                        <div class="page-source" title="${page.fileName}">${page.fileName}</div>
+                    </div>
+                `;
+
+                pagesGrid.appendChild(card);
+            });
+        }
+
+        // 순서 뱃지 업데이트
+        function updateOrderBadges() {
+            const cards = filesGrid.querySelectorAll('.file-card');
+            cards.forEach((card, index) => {
+                const badge = card.querySelector('.order-badge');
+                if (badge) badge.textContent = index + 1;
+            });
+        }
+
+        function updatePageOrderBadges() {
+            const cards = pagesGrid.querySelectorAll('.page-card');
+            cards.forEach((card, index) => {
+                const badge = card.querySelector('.order-badge');
+                if (badge) badge.textContent = index + 1;
+            });
+        }
+
+        // 버튼 상태 업데이트
+        function updateButtons() {
+            const hasFiles = files.length > 0;
+            document.getElementById('clearBtn').disabled = !hasFiles;
+            document.getElementById('mergeBtn').disabled = !hasFiles;
+        }
+
+        // 뷰 전환
+        function switchView(view) {
+            currentView = view;
+            
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+
+            if (view === 'file') {
+                filesGrid.classList.remove('hidden');
+                pagesGrid.classList.add('hidden');
+            } else {
+                filesGrid.classList.add('hidden');
+                pagesGrid.classList.remove('hidden');
+            }
+        }
+
+        // 파일 삭제
+        function removeFile(fileId) {
+            const index = files.findIndex(f => f.id === fileId);
+            if (index !== -1) {
+                files.splice(index, 1);
+                rebuildAllPages();
+                updateUI();
+                showToast('파일이 삭제되었습니다.', 'info');
+            }
+        }
+
+        // 페이지 삭제
+        function removePage(pageId) {
+            const index = allPages.findIndex(p => p.id === pageId);
+            if (index !== -1) {
+                allPages.splice(index, 1);
+                updateFileCount();
+                renderPages();
+                updatePageOrderBadges();
+                showToast('페이지가 삭제되었습니다.', 'info');
+            }
+        }
+
+        // 전체 삭제
+        function clearAll() {
+            if (confirm('모든 파일을 삭제하시겠습니까?')) {
+                files = [];
+                allPages = [];
+                fileIdCounter = 0;
+                pageIdCounter = 0;
+                updateUI();
+                showToast('모든 파일이 삭제되었습니다.', 'info');
+            }
+        }
+
+        // PDF 병합 및 다운로드
+        async function mergeAndDownload() {
+            if (allPages.length === 0) {
+                showToast('병합할 페이지가 없습니다.', 'error');
+                return;
+            }
+
+            showProgress('PDF 생성 중...', 0);
+
+            try {
+                const { PDFDocument, rgb } = PDFLib;
+                const mergedPdf = await PDFDocument.create();
+                const compressionLevel = document.getElementById('compressionLevel').value;
+                
+                // 이미 로드된 PDF 캐시
+                const pdfCache = new Map();
+                let successCount = 0;
+
+                for (let i = 0; i < allPages.length; i++) {
+                    const page = allPages[i];
+                    const progress = ((i + 1) / allPages.length) * 100;
+                    updateProgress(progress, `페이지 ${i + 1}/${allPages.length} 처리 중...`);
+
+                    const file = files.find(f => f.id === page.fileId);
+                    
+                    if (!file) {
+                        console.warn(`파일을 찾을 수 없습니다: fileId=${page.fileId}`);
+                        continue;
+                    }
+                    
+                    try {
+                        if (file.type === 'pdf') {
+                            // PDF 페이지 복사
+                            let srcPdf = pdfCache.get(file.id);
+                            if (!srcPdf) {
+                                // 데이터 복사본 사용
+                                const dataCopy = copyArrayBuffer(file.data);
+                                const uint8Array = new Uint8Array(dataCopy);
+                                srcPdf = await PDFDocument.load(uint8Array, { ignoreEncryption: true });
+                                pdfCache.set(file.id, srcPdf);
+                            }
+                            
+                            const pageIndex = page.pageNum - 1;
+                            if (pageIndex >= 0 && pageIndex < srcPdf.getPageCount()) {
+                                const [copiedPage] = await mergedPdf.copyPages(srcPdf, [pageIndex]);
+                                mergedPdf.addPage(copiedPage);
+                                successCount++;
+                            }
+                        } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(file.type)) {
+                            // 이미지를 PDF 페이지로 변환
+                            let image;
+                            // 데이터 복사본 사용
+                            const dataCopy = copyArrayBuffer(file.data);
+                            const uint8Array = new Uint8Array(dataCopy);
+                            
+                            try {
+                                if (['jpg', 'jpeg'].includes(file.type)) {
+                                    image = await mergedPdf.embedJpg(uint8Array);
+                                } else {
+                                    image = await mergedPdf.embedPng(uint8Array);
+                                }
+                            } catch (imgErr) {
+                                console.error('이미지 임베드 오류:', imgErr);
+                                // PNG로 재시도
+                                try {
+                                    image = await mergedPdf.embedPng(uint8Array);
+                                } catch (e) {
+                                    console.error('PNG 재시도 실패:', e);
+                                    continue; // 이 페이지 건너뛰기
+                                }
+                            }
+
+                            const imgWidth = page.originalWidth || image.width;
+                            const imgHeight = page.originalHeight || image.height;
+                            
+                            // 이미지 크기에 맞게 페이지 생성
+                            const maxWidth = 595.28; // A4 width
+                            const maxHeight = 841.89; // A4 height
+                            
+                            let pageWidth = imgWidth;
+                            let pageHeight = imgHeight;
+                            
+                            // 너무 큰 경우 A4 내로 축소
+                            if (pageWidth > maxWidth || pageHeight > maxHeight) {
+                                const widthRatio = maxWidth / pageWidth;
+                                const heightRatio = maxHeight / pageHeight;
+                                const ratio = Math.min(widthRatio, heightRatio);
+                                pageWidth *= ratio;
+                                pageHeight *= ratio;
+                            }
+
+                            const newPage = mergedPdf.addPage([pageWidth, pageHeight]);
+                            newPage.drawImage(image, {
+                                x: 0,
+                                y: 0,
+                                width: pageWidth,
+                                height: pageHeight
+                            });
+                            successCount++;
+                        } else if (page.isOffice) {
+                            // Office 파일은 알림 표시
+                            const newPage = mergedPdf.addPage([595.28, 841.89]);
+                            newPage.drawText(`${file.name}`, {
+                                x: 50,
+                                y: 750,
+                                size: 20,
+                                color: rgb(0.2, 0.2, 0.2)
+                            });
+                            newPage.drawText('Office 파일은 별도 변환이 필요합니다.', {
+                                x: 50,
+                                y: 700,
+                                size: 14,
+                                color: rgb(0.5, 0.5, 0.5)
+                            });
+                            successCount++;
+                        }
+                    } catch (pageErr) {
+                        console.error(`페이지 처리 오류 (${file.name}, 페이지 ${page.pageNum}):`, pageErr);
+                        // 오류가 발생해도 계속 진행
+                    }
+                }
+
+                if (mergedPdf.getPageCount() === 0) {
+                    throw new Error('병합할 유효한 페이지가 없습니다. PDF 파일이 손상되었거나 지원하지 않는 형식일 수 있습니다.');
+                }
+
+                // 압축 옵션 적용
+                const saveOptions = {};
+                if (compressionLevel !== 'none') {
+                    saveOptions.useObjectStreams = true;
+                }
+
+                const pdfBytes = await mergedPdf.save(saveOptions);
+                
+                // 다운로드
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `merged_${new Date().toISOString().slice(0, 10)}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                hideProgress();
+                showToast(`PDF가 생성되었습니다! (${mergedPdf.getPageCount()}페이지)`, 'success');
+
+            } catch (error) {
+                console.error('병합 오류:', error);
+                hideProgress();
+                showToast(`PDF 생성 중 오류: ${error.message}`, 'error');
+            }
+        }
+
+        // 유틸리티 함수들
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function showProgress(title, percent) {
+            progressTitle.textContent = title;
+            progressBar.style.width = percent + '%';
+            progressText.textContent = Math.round(percent) + '%';
+            progressOverlay.classList.add('show');
+        }
+
+        function updateProgress(percent, text) {
+            progressBar.style.width = percent + '%';
+            progressText.textContent = text || Math.round(percent) + '%';
+        }
+
+        function hideProgress() {
+            progressOverlay.classList.remove('show');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'ℹ️';
+            if (type === 'success') icon = '✅';
+            if (type === 'error') icon = '❌';
+
+            toast.innerHTML = `
+                <span>${icon}</span>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // 초기화 실행
+        init();
+    </script>
+</body>
+</html>
+
