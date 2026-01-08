@@ -651,3 +651,23 @@ function goToPdfMerge() {
     }
     window.location.href = 'pdf-merge.html';
 }
+
+// 이미지 편집 페이지로 이동 (로그인 체크)
+function goToImageEditor() {
+    if (!isLoggedIn) {
+        alert('이미지 편집 기능을 사용하려면 로그인이 필요합니다.');
+        openLoginModal();
+        return;
+    }
+    window.location.href = 'image-editor.html';
+}
+
+// 동영상 도구 페이지로 이동 (로그인 체크)
+function goToVideoTools() {
+    if (!isLoggedIn) {
+        alert('동영상 도구 기능을 사용하려면 로그인이 필요합니다.');
+        openLoginModal();
+        return;
+    }
+    window.location.href = 'video-tools.html';
+}

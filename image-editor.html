@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이미지 도구 - KAMIC Lab</title>
+    <!-- UTIF.js for TIFF files -->
+    <script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.min.js"></script>
+    <!-- PSD.js for PSD files -->
+    <script src="https://cdn.jsdelivr.net/npm/psd.js@3.4.0/dist/psd.min.js"></script>
+    <!-- Cropper.js for image cropping -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d1b4e 50%, #1a1a2e 100%);
+            min-height: 100vh;
+            color: #e4e4e7;
+        }
+
+        /* 헤더 */
+        header {
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .navbar {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo h2 {
+            background: linear-gradient(135deg, #f472b6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo h2 a {
+            text-decoration: none;
+            background: linear-gradient(135deg, #f472b6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-title::before {
+            content: '🖼️';
+            font-size: 1.6rem;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #f472b6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(244, 114, 182, 0.4);
+        }
+
+        /* 메인 컨텐츠 */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* 탭 네비게이션 */
+        .tab-nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: rgba(30, 30, 60, 0.6);
+            padding: 0.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 1rem 2rem;
+            color: #a1a1aa;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #f472b6 0%, #8b5cf6 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(244, 114, 182, 0.3);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* 탭 컨텐츠 */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 공통 섹션 스타일 */
+        .section-card {
+            background: rgba(30, 30, 60, 0.6);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* 업로드 영역 */
+        .upload-area {
+            background: rgba(20, 20, 50, 0.5);
+            border: 3px dashed rgba(244, 114, 182, 0.4);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover,
+        .upload-area.drag-over {
+            border-color: #f472b6;
+            background: rgba(244, 114, 182, 0.1);
+            transform: scale(1.01);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .upload-area h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #f472b6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-area p {
+            color: #a1a1aa;
+            margin-bottom: 1rem;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #f472b6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(244, 114, 182, 0.4);
+        }
+
+        .supported-formats {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .format-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.3rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            color: #d4d4d8;
+        }
+
+        /* 미리보기 영역 */
+        .preview-area {
+            display: none;
+            margin-top: 1.5rem;
+        }
+
+        .preview-area.show {
+            display: block;
+        }
+
+        .preview-container {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .preview-box {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .preview-box h4 {
+            color: #a1a1aa;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .preview-image-container {
+            background: repeating-conic-gradient(#333 0% 25%, #444 0% 50%) 50% / 20px 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+        }
+
+        .image-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: #a1a1aa;
+        }
+
+        .image-info p {
+            margin: 0.3rem 0;
+        }
+
+        .image-info span {
+            color: #f472b6;
+            font-weight: 600;
+        }
+
+        /* 옵션 영역 */
+        .options-area {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+        }
+
+        .option-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .option-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .option-label {
+            display: block;
+            color: #fff;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .option-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .format-select,
+        .number-input,
+        .quality-slider {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .format-select:focus,
+        .number-input:focus {
+            outline: none;
+            border-color: #f472b6;
+            box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.2);
+        }
+
+        .format-select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .number-input {
+            width: 120px;
+        }
+
+        .quality-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .quality-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .quality-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f472b6 0%, #8b5cf6 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(244, 114, 182, 0.4);
+        }
+
+        .quality-value {
+            color: #f472b6;
+            font-weight: 600;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        /* 액션 버튼 */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #f472b6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(244, 114, 182, 0.4);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .action-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .action-btn.secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: none;
+        }
+
+        .action-btn.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .action-btn.success:hover:not(:disabled) {
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        /* 크롭 영역 */
+        .crop-container {
+            display: none;
+            margin-top: 1.5rem;
+        }
+
+        .crop-container.show {
+            display: block;
+        }
+
+        .crop-preview {
+            max-height: 500px;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #000;
+        }
+
+        .crop-preview img {
+            max-width: 100%;
+            display: block;
+        }
+
+        .crop-controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .aspect-ratio-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .ratio-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #a1a1aa;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+        }
+
+        .ratio-btn.active,
+        .ratio-btn:hover {
+            background: linear-gradient(135deg, #f472b6 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        /* 리사이즈 옵션 */
+        .resize-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .resize-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .resize-input-group label {
+            color: #a1a1aa;
+            font-size: 0.9rem;
+        }
+
+        .lock-ratio-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #a1a1aa;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .lock-ratio-btn.active {
+            background: linear-gradient(135deg, #f472b6 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        /* 프로그레스 오버레이 */
+        .progress-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .progress-overlay.show {
+            display: flex;
+        }
+
+        .progress-card {
+            background: rgba(30, 30, 60, 0.95);
+            border-radius: 24px;
+            padding: 3rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #f472b6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-card h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+
+        /* 토스트 알림 */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .toast {
+            background: rgba(30, 30, 60, 0.95);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            animation: slideIn 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error { border-left: 4px solid #ef4444; }
+        .toast.info { border-left: 4px solid #f472b6; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* 푸터 */
+        footer {
+            background: rgba(15, 15, 35, 0.95);
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 3rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        footer p {
+            color: #71717a;
+            font-size: 0.9rem;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .tab-nav {
+                flex-direction: column;
+            }
+
+            .preview-container {
+                flex-direction: column;
+            }
+
+            .resize-options {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* Cropper.js 스타일 오버라이드 */
+        .cropper-view-box,
+        .cropper-face {
+            border-radius: 0;
+        }
+
+        .cropper-line {
+            background-color: #f472b6;
+        }
+
+        .cropper-point {
+            background-color: #f472b6;
+            width: 10px;
+            height: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <h2><a href="index.html">KAMIC Lab</a></h2>
+            </div>
+            <div class="nav-title">이미지 도구</div>
+            <a href="index.html" class="back-btn">← 홈으로</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- 탭 네비게이션 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="convert" onclick="switchTab('convert')">
+                🔄 확장자 변환
+            </button>
+            <button class="tab-btn" data-tab="edit" onclick="switchTab('edit')">
+                ✂️ 이미지 편집
+            </button>
+        </div>
+
+        <!-- 확장자 변환 탭 -->
+        <div class="tab-content active" id="convertTab">
+            <div class="section-card">
+                <h3 class="section-title">🔄 이미지 확장자 변환</h3>
+                
+                <div class="upload-area" id="convertUploadArea" onclick="document.getElementById('convertFileInput').click()">
+                    <div class="upload-icon">📷</div>
+                    <h3>이미지를 드래그하거나 클릭하여 업로드</h3>
+                    <p>변환할 이미지 파일을 선택하세요</p>
+                    <button class="upload-btn" onclick="event.stopPropagation();">파일 선택</button>
+                    <div class="supported-formats">
+                        <span class="format-badge">JPG</span>
+                        <span class="format-badge">PNG</span>
+                        <span class="format-badge">GIF</span>
+                        <span class="format-badge">TIFF</span>
+                        <span class="format-badge">SVG</span>
+                        <span class="format-badge">WebP</span>
+                        <span class="format-badge">PSD</span>
+                    </div>
+                    <input type="file" id="convertFileInput" accept=".jpg,.jpeg,.png,.gif,.tiff,.tif,.svg,.webp,.psd" style="display: none">
+                </div>
+
+                <div class="preview-area" id="convertPreviewArea">
+                    <div class="preview-container">
+                        <div class="preview-box">
+                            <h4>원본 이미지</h4>
+                            <div class="preview-image-container">
+                                <img id="convertPreviewImage" class="preview-image" src="" alt="미리보기">
+                            </div>
+                            <div class="image-info" id="convertImageInfo">
+                                <p>파일명: <span id="convertFileName">-</span></p>
+                                <p>크기: <span id="convertImageSize">-</span></p>
+                                <p>해상도: <span id="convertImageDimensions">-</span></p>
+                                <p>형식: <span id="convertImageFormat">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="options-area">
+                        <div class="option-group">
+                            <label class="option-label">출력 형식 선택</label>
+                            <div class="option-row">
+                                <select class="format-select" id="outputFormat">
+                                    <option value="jpeg">JPG (JPEG)</option>
+                                    <option value="png">PNG</option>
+                                    <option value="gif">GIF</option>
+                                    <option value="webp">WebP</option>
+                                    <option value="tiff">TIFF</option>
+                                    <option value="svg">SVG</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="option-group" id="qualityOption">
+                            <label class="option-label">품질 설정</label>
+                            <div class="quality-container">
+                                <input type="range" class="quality-slider" id="convertQuality" min="10" max="100" value="90">
+                                <span class="quality-value" id="convertQualityValue">90%</span>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="action-btn success" id="convertBtn" onclick="convertImage()" disabled>
+                                🔄 변환하기
+                            </button>
+                            <button class="action-btn secondary" onclick="resetConvert()">
+                                🗑️ 초기화
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 이미지 편집 탭 -->
+        <div class="tab-content" id="editTab">
+            <div class="section-card">
+                <h3 class="section-title">✂️ 이미지 편집</h3>
+                
+                <div class="upload-area" id="editUploadArea" onclick="document.getElementById('editFileInput').click()">
+                    <div class="upload-icon">🖼️</div>
+                    <h3>편집할 이미지를 업로드하세요</h3>
+                    <p>리사이즈, 크롭, 압축 기능을 사용할 수 있습니다</p>
+                    <button class="upload-btn" onclick="event.stopPropagation();">파일 선택</button>
+                    <div class="supported-formats">
+                        <span class="format-badge">JPG</span>
+                        <span class="format-badge">PNG</span>
+                        <span class="format-badge">GIF</span>
+                        <span class="format-badge">WebP</span>
+                    </div>
+                    <input type="file" id="editFileInput" accept=".jpg,.jpeg,.png,.gif,.webp" style="display: none">
+                </div>
+
+                <div class="preview-area" id="editPreviewArea">
+                    <!-- 원본 정보 -->
+                    <div class="image-info" id="editImageInfo" style="margin-bottom: 1.5rem;">
+                        <p>📁 파일명: <span id="editFileName">-</span></p>
+                        <p>📐 원본 크기: <span id="editOriginalSize">-</span></p>
+                        <p>💾 파일 크기: <span id="editFileSize">-</span></p>
+                    </div>
+
+                    <!-- 리사이즈 옵션 -->
+                    <div class="options-area">
+                        <div class="option-group">
+                            <label class="option-label">📐 리사이즈</label>
+                            <div class="resize-options">
+                                <div class="resize-input-group">
+                                    <label>너비:</label>
+                                    <input type="number" class="number-input" id="resizeWidth" placeholder="px" min="1">
+                                </div>
+                                <button class="lock-ratio-btn active" id="lockRatioBtn" onclick="toggleLockRatio()" title="비율 고정">
+                                    🔗
+                                </button>
+                                <div class="resize-input-group">
+                                    <label>높이:</label>
+                                    <input type="number" class="number-input" id="resizeHeight" placeholder="px" min="1">
+                                </div>
+                                <div class="resize-input-group">
+                                    <label>또는 비율:</label>
+                                    <input type="number" class="number-input" id="resizePercent" placeholder="%" value="100" min="1" max="500">
+                                    <span style="color: #a1a1aa;">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="option-group">
+                            <label class="option-label">💾 파일 크기 압축 (품질)</label>
+                            <div class="quality-container">
+                                <input type="range" class="quality-slider" id="editQuality" min="10" max="100" value="90">
+                                <span class="quality-value" id="editQualityValue">90%</span>
+                            </div>
+                            <p style="color: #71717a; font-size: 0.85rem; margin-top: 0.5rem;">
+                                품질을 낮추면 파일 크기가 줄어듭니다
+                            </p>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="action-btn" id="applyResizeBtn" onclick="applyResize()" disabled>
+                                📐 리사이즈 적용
+                            </button>
+                            <button class="action-btn" id="toggleCropBtn" onclick="toggleCrop()" disabled>
+                                ✂️ 크롭 모드
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 크롭 영역 -->
+                    <div class="crop-container" id="cropContainer">
+                        <div class="crop-preview" id="cropPreview">
+                            <img id="cropImage" src="" alt="크롭 미리보기">
+                        </div>
+                        <div class="crop-controls">
+                            <span style="color: #a1a1aa;">비율:</span>
+                            <div class="aspect-ratio-btns">
+                                <button class="ratio-btn active" onclick="setAspectRatio(NaN)">자유</button>
+                                <button class="ratio-btn" onclick="setAspectRatio(1)">1:1</button>
+                                <button class="ratio-btn" onclick="setAspectRatio(4/3)">4:3</button>
+                                <button class="ratio-btn" onclick="setAspectRatio(16/9)">16:9</button>
+                                <button class="ratio-btn" onclick="setAspectRatio(3/2)">3:2</button>
+                            </div>
+                            <button class="action-btn success" onclick="applyCrop()">✂️ 크롭 적용</button>
+                            <button class="action-btn secondary" onclick="cancelCrop()">취소</button>
+                        </div>
+                    </div>
+
+                    <!-- 결과 미리보기 -->
+                    <div class="preview-container" style="margin-top: 1.5rem;">
+                        <div class="preview-box">
+                            <h4>편집 결과</h4>
+                            <div class="preview-image-container">
+                                <img id="editResultImage" class="preview-image" src="" alt="결과 미리보기">
+                            </div>
+                            <div class="image-info" id="editResultInfo">
+                                <p>새 크기: <span id="editNewSize">-</span></p>
+                                <p>예상 파일 크기: <span id="editNewFileSize">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons" style="margin-top: 1.5rem;">
+                        <button class="action-btn success" id="downloadEditBtn" onclick="downloadEditedImage()" disabled>
+                            💾 다운로드
+                        </button>
+                        <button class="action-btn secondary" onclick="resetEdit()">
+                            🗑️ 초기화
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 프로그레스 오버레이 -->
+    <div class="progress-overlay" id="progressOverlay">
+        <div class="progress-card">
+            <div class="spinner"></div>
+            <h3 id="progressTitle">처리 중...</h3>
+        </div>
+    </div>
+
+    <!-- 토스트 컨테이너 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <footer>
+        <p>&copy; KAMIC Lab. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // 전역 상태
+        let convertImage_data = null;
+        let editImage_data = null;
+        let editCanvas = null;
+        let cropper = null;
+        let isLockRatio = true;
+        let originalWidth = 0;
+        let originalHeight = 0;
+        let aspectRatio = 1;
+
+        // 로그인 상태 확인
+        function checkLoginStatus() {
+            let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || 
+                             sessionStorage.getItem('isLoggedIn') === 'true';
+            
+            if (!isLoggedIn) {
+                alert('이 기능을 사용하려면 로그인이 필요합니다.');
+                window.location.href = 'index.html';
+                return false;
+            }
+            return true;
+        }
+
+        // 초기화
+        function init() {
+            if (!checkLoginStatus()) return;
+            
+            setupConvertUpload();
+            setupEditUpload();
+            setupQualitySliders();
+            setupResizeInputs();
+        }
+
+        // 탭 전환
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabName);
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === tabName + 'Tab');
+            });
+        }
+
+        // 확장자 변환 업로드 설정
+        function setupConvertUpload() {
+            const uploadArea = document.getElementById('convertUploadArea');
+            const fileInput = document.getElementById('convertFileInput');
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('drag-over');
+            });
+
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) {
+                    handleConvertFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleConvertFile(e.target.files[0]);
+                }
+            });
+        }
+
+        // 확장자 변환 파일 처리
+        async function handleConvertFile(file) {
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/tiff'];
+            const ext = file.name.toLowerCase().split('.').pop();
+            
+            if (!validTypes.includes(file.type) && !['psd', 'tif', 'tiff', 'svg'].includes(ext)) {
+                showToast('지원하지 않는 파일 형식입니다.', 'error');
+                return;
+            }
+
+            showProgress('이미지 로딩 중...');
+
+            try {
+                let imageData;
+                
+                if (ext === 'psd') {
+                    imageData = await loadPSD(file);
+                } else if (ext === 'tif' || ext === 'tiff') {
+                    imageData = await loadTIFF(file);
+                } else {
+                    imageData = await loadNormalImage(file);
+                }
+
+                convertImage_data = imageData;
+                
+                // 미리보기 표시
+                document.getElementById('convertPreviewImage').src = imageData.dataUrl;
+                document.getElementById('convertFileName').textContent = file.name;
+                document.getElementById('convertImageSize').textContent = formatFileSize(file.size);
+                document.getElementById('convertImageDimensions').textContent = `${imageData.width} × ${imageData.height}px`;
+                document.getElementById('convertImageFormat').textContent = ext.toUpperCase();
+                
+                document.getElementById('convertPreviewArea').classList.add('show');
+                document.getElementById('convertBtn').disabled = false;
+                
+                hideProgress();
+                showToast('이미지가 로드되었습니다.', 'success');
+            } catch (error) {
+                hideProgress();
+                showToast('이미지 로드 중 오류가 발생했습니다.', 'error');
+                console.error(error);
+            }
+        }
+
+        // PSD 파일 로드
+        async function loadPSD(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const psd = new PSD(new Uint8Array(e.target.result));
+                        await psd.parse();
+                        const canvas = psd.image.toPng();
+                        resolve({
+                            dataUrl: canvas.src || canvas.toDataURL('image/png'),
+                            width: psd.header.width,
+                            height: psd.header.height,
+                            canvas: canvas
+                        });
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // TIFF 파일 로드
+        async function loadTIFF(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const ifds = UTIF.decode(e.target.result);
+                        UTIF.decodeImage(e.target.result, ifds[0]);
+                        const rgba = UTIF.toRGBA8(ifds[0]);
+                        
+                        const canvas = document.createElement('canvas');
+                        canvas.width = ifds[0].width;
+                        canvas.height = ifds[0].height;
+                        const ctx = canvas.getContext('2d');
+                        const imgData = ctx.createImageData(canvas.width, canvas.height);
+                        imgData.data.set(rgba);
+                        ctx.putImageData(imgData, 0, 0);
+                        
+                        resolve({
+                            dataUrl: canvas.toDataURL('image/png'),
+                            width: canvas.width,
+                            height: canvas.height,
+                            canvas: canvas
+                        });
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // 일반 이미지 로드
+        async function loadNormalImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        
+                        resolve({
+                            dataUrl: e.target.result,
+                            width: img.width,
+                            height: img.height,
+                            canvas: canvas
+                        });
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 이미지 변환
+        async function convertImage() {
+            if (!convertImage_data) return;
+
+            const format = document.getElementById('outputFormat').value;
+            const quality = document.getElementById('convertQuality').value / 100;
+
+            showProgress('변환 중...');
+
+            try {
+                let dataUrl;
+                const canvas = convertImage_data.canvas;
+
+                if (format === 'svg') {
+                    // SVG로 변환 (래스터 이미지를 SVG로 감싸기)
+                    const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${canvas.width}" height="${canvas.height}">
+    <image width="${canvas.width}" height="${canvas.height}" xlink:href="${canvas.toDataURL('image/png')}"/>
+</svg>`;
+                    dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
+                } else if (format === 'tiff') {
+                    // TIFF로 변환
+                    const ctx = canvas.getContext('2d');
+                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const tiffData = UTIF.encodeImage(imgData.data, canvas.width, canvas.height);
+                    const blob = new Blob([tiffData], { type: 'image/tiff' });
+                    dataUrl = URL.createObjectURL(blob);
+                    
+                    // 다운로드
+                    const link = document.createElement('a');
+                    link.href = dataUrl;
+                    link.download = `converted_image.tiff`;
+                    link.click();
+                    URL.revokeObjectURL(dataUrl);
+                    
+                    hideProgress();
+                    showToast('TIFF 파일이 다운로드되었습니다.', 'success');
+                    return;
+                } else {
+                    const mimeType = format === 'jpeg' ? 'image/jpeg' : 
+                                     format === 'png' ? 'image/png' :
+                                     format === 'gif' ? 'image/gif' :
+                                     format === 'webp' ? 'image/webp' : 'image/png';
+                    
+                    dataUrl = canvas.toDataURL(mimeType, quality);
+                }
+
+                // 다운로드
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = `converted_image.${format === 'jpeg' ? 'jpg' : format}`;
+                link.click();
+
+                hideProgress();
+                showToast('변환이 완료되었습니다.', 'success');
+            } catch (error) {
+                hideProgress();
+                showToast('변환 중 오류가 발생했습니다.', 'error');
+                console.error(error);
+            }
+        }
+
+        // 확장자 변환 초기화
+        function resetConvert() {
+            convertImage_data = null;
+            document.getElementById('convertPreviewArea').classList.remove('show');
+            document.getElementById('convertFileInput').value = '';
+            document.getElementById('convertBtn').disabled = true;
+        }
+
+        // 이미지 편집 업로드 설정
+        function setupEditUpload() {
+            const uploadArea = document.getElementById('editUploadArea');
+            const fileInput = document.getElementById('editFileInput');
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('drag-over');
+            });
+
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) {
+                    handleEditFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleEditFile(e.target.files[0]);
+                }
+            });
+        }
+
+        // 편집용 파일 처리
+        async function handleEditFile(file) {
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            
+            if (!validTypes.includes(file.type)) {
+                showToast('JPG, PNG, GIF, WebP 파일만 지원합니다.', 'error');
+                return;
+            }
+
+            showProgress('이미지 로딩 중...');
+
+            try {
+                const imageData = await loadNormalImage(file);
+                editImage_data = imageData;
+                editCanvas = imageData.canvas;
+                originalWidth = imageData.width;
+                originalHeight = imageData.height;
+                aspectRatio = originalWidth / originalHeight;
+
+                // 정보 표시
+                document.getElementById('editFileName').textContent = file.name;
+                document.getElementById('editOriginalSize').textContent = `${imageData.width} × ${imageData.height}px`;
+                document.getElementById('editFileSize').textContent = formatFileSize(file.size);
+                
+                // 리사이즈 입력 초기화
+                document.getElementById('resizeWidth').value = imageData.width;
+                document.getElementById('resizeHeight').value = imageData.height;
+                document.getElementById('resizePercent').value = 100;
+
+                // 결과 미리보기
+                document.getElementById('editResultImage').src = imageData.dataUrl;
+                updateEditResult();
+
+                // 크롭 이미지 설정
+                document.getElementById('cropImage').src = imageData.dataUrl;
+
+                document.getElementById('editPreviewArea').classList.add('show');
+                document.getElementById('applyResizeBtn').disabled = false;
+                document.getElementById('toggleCropBtn').disabled = false;
+                document.getElementById('downloadEditBtn').disabled = false;
+
+                hideProgress();
+                showToast('이미지가 로드되었습니다.', 'success');
+            } catch (error) {
+                hideProgress();
+                showToast('이미지 로드 중 오류가 발생했습니다.', 'error');
+                console.error(error);
+            }
+        }
+
+        // 품질 슬라이더 설정
+        function setupQualitySliders() {
+            const convertSlider = document.getElementById('convertQuality');
+            const convertValue = document.getElementById('convertQualityValue');
+            
+            convertSlider.addEventListener('input', () => {
+                convertValue.textContent = convertSlider.value + '%';
+            });
+
+            const editSlider = document.getElementById('editQuality');
+            const editValue = document.getElementById('editQualityValue');
+            
+            editSlider.addEventListener('input', () => {
+                editValue.textContent = editSlider.value + '%';
+                updateEditResult();
+            });
+        }
+
+        // 리사이즈 입력 설정
+        function setupResizeInputs() {
+            const widthInput = document.getElementById('resizeWidth');
+            const heightInput = document.getElementById('resizeHeight');
+            const percentInput = document.getElementById('resizePercent');
+
+            widthInput.addEventListener('input', () => {
+                if (isLockRatio && originalWidth > 0) {
+                    const newWidth = parseInt(widthInput.value) || 0;
+                    const newHeight = Math.round(newWidth / aspectRatio);
+                    heightInput.value = newHeight;
+                    percentInput.value = Math.round((newWidth / originalWidth) * 100);
+                }
+            });
+
+            heightInput.addEventListener('input', () => {
+                if (isLockRatio && originalHeight > 0) {
+                    const newHeight = parseInt(heightInput.value) || 0;
+                    const newWidth = Math.round(newHeight * aspectRatio);
+                    widthInput.value = newWidth;
+                    percentInput.value = Math.round((newHeight / originalHeight) * 100);
+                }
+            });
+
+            percentInput.addEventListener('input', () => {
+                if (originalWidth > 0 && originalHeight > 0) {
+                    const percent = parseInt(percentInput.value) || 100;
+                    widthInput.value = Math.round(originalWidth * percent / 100);
+                    heightInput.value = Math.round(originalHeight * percent / 100);
+                }
+            });
+        }
+
+        // 비율 고정 토글
+        function toggleLockRatio() {
+            isLockRatio = !isLockRatio;
+            document.getElementById('lockRatioBtn').classList.toggle('active', isLockRatio);
+            document.getElementById('lockRatioBtn').textContent = isLockRatio ? '🔗' : '🔓';
+        }
+
+        // 리사이즈 적용
+        function applyResize() {
+            if (!editImage_data) return;
+
+            const newWidth = parseInt(document.getElementById('resizeWidth').value) || originalWidth;
+            const newHeight = parseInt(document.getElementById('resizeHeight').value) || originalHeight;
+
+            if (newWidth < 1 || newHeight < 1) {
+                showToast('유효한 크기를 입력하세요.', 'error');
+                return;
+            }
+
+            showProgress('리사이즈 중...');
+
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = newWidth;
+                canvas.height = newHeight;
+                const ctx = canvas.getContext('2d');
+                
+                // 원본 이미지 로드
+                const img = new Image();
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0, newWidth, newHeight);
+                    editCanvas = canvas;
+                    
+                    const quality = document.getElementById('editQuality').value / 100;
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    document.getElementById('editResultImage').src = dataUrl;
+                    
+                    updateEditResult();
+                    hideProgress();
+                    showToast('리사이즈가 적용되었습니다.', 'success');
+                };
+                img.src = editImage_data.dataUrl;
+            } catch (error) {
+                hideProgress();
+                showToast('리사이즈 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 크롭 모드 토글
+        function toggleCrop() {
+            const cropContainer = document.getElementById('cropContainer');
+            const isVisible = cropContainer.classList.contains('show');
+
+            if (isVisible) {
+                cancelCrop();
+            } else {
+                cropContainer.classList.add('show');
+                
+                if (cropper) {
+                    cropper.destroy();
+                }
+                
+                const cropImage = document.getElementById('cropImage');
+                cropImage.src = editImage_data.dataUrl;
+                
+                cropper = new Cropper(cropImage, {
+                    viewMode: 1,
+                    autoCropArea: 0.8,
+                    responsive: true,
+                    background: false
+                });
+            }
+        }
+
+        // 크롭 비율 설정
+        function setAspectRatio(ratio) {
+            if (cropper) {
+                cropper.setAspectRatio(ratio);
+            }
+            
+            document.querySelectorAll('.ratio-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // 크롭 적용
+        function applyCrop() {
+            if (!cropper) return;
+
+            showProgress('크롭 적용 중...');
+
+            try {
+                const croppedCanvas = cropper.getCroppedCanvas();
+                editCanvas = croppedCanvas;
+                
+                const quality = document.getElementById('editQuality').value / 100;
+                const dataUrl = croppedCanvas.toDataURL('image/jpeg', quality);
+                
+                document.getElementById('editResultImage').src = dataUrl;
+                document.getElementById('resizeWidth').value = croppedCanvas.width;
+                document.getElementById('resizeHeight').value = croppedCanvas.height;
+                
+                updateEditResult();
+                cancelCrop();
+                
+                hideProgress();
+                showToast('크롭이 적용되었습니다.', 'success');
+            } catch (error) {
+                hideProgress();
+                showToast('크롭 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 크롭 취소
+        function cancelCrop() {
+            document.getElementById('cropContainer').classList.remove('show');
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }
+
+        // 편집 결과 업데이트
+        function updateEditResult() {
+            if (!editCanvas) return;
+
+            const quality = document.getElementById('editQuality').value / 100;
+            const dataUrl = editCanvas.toDataURL('image/jpeg', quality);
+            
+            document.getElementById('editResultImage').src = dataUrl;
+            document.getElementById('editNewSize').textContent = `${editCanvas.width} × ${editCanvas.height}px`;
+            
+            // 예상 파일 크기 계산
+            const base64Length = dataUrl.length - 'data:image/jpeg;base64,'.length;
+            const estimatedSize = Math.round(base64Length * 0.75);
+            document.getElementById('editNewFileSize').textContent = formatFileSize(estimatedSize);
+        }
+
+        // 편집된 이미지 다운로드
+        function downloadEditedImage() {
+            if (!editCanvas) return;
+
+            const quality = document.getElementById('editQuality').value / 100;
+            const dataUrl = editCanvas.toDataURL('image/jpeg', quality);
+
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = 'edited_image.jpg';
+            link.click();
+
+            showToast('이미지가 다운로드되었습니다.', 'success');
+        }
+
+        // 편집 초기화
+        function resetEdit() {
+            editImage_data = null;
+            editCanvas = null;
+            
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            
+            document.getElementById('editPreviewArea').classList.remove('show');
+            document.getElementById('cropContainer').classList.remove('show');
+            document.getElementById('editFileInput').value = '';
+            document.getElementById('applyResizeBtn').disabled = true;
+            document.getElementById('toggleCropBtn').disabled = true;
+            document.getElementById('downloadEditBtn').disabled = true;
+        }
+
+        // 유틸리티 함수
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function showProgress(title) {
+            document.getElementById('progressTitle').textContent = title;
+            document.getElementById('progressOverlay').classList.add('show');
+        }
+
+        function hideProgress() {
+            document.getElementById('progressOverlay').classList.remove('show');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'ℹ️';
+            if (type === 'success') icon = '✅';
+            if (type === 'error') icon = '❌';
+
+            toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // 초기화 실행
+        init();
+    </script>
+</body>
+</html>
+

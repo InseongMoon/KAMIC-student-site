@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동영상 도구 - KAMIC Lab</title>
+    <!-- FFmpeg.wasm for video processing -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #2d1f4e 100%);
+            min-height: 100vh;
+            color: #e4e4e7;
+        }
+
+        /* 헤더 */
+        header {
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .navbar {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo h2 {
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo h2 a {
+            text-decoration: none;
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-title::before {
+            content: '🎬';
+            font-size: 1.6rem;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+        }
+
+        /* 메인 컨텐츠 */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* 탭 네비게이션 */
+        .tab-nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: rgba(30, 30, 60, 0.6);
+            padding: 0.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 1rem 2rem;
+            color: #a1a1aa;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* 탭 컨텐츠 */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 공통 섹션 스타일 */
+        .section-card {
+            background: rgba(30, 30, 60, 0.6);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* 업로드 영역 */
+        .upload-area {
+            background: rgba(20, 20, 50, 0.5);
+            border: 3px dashed rgba(6, 182, 212, 0.4);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover,
+        .upload-area.drag-over {
+            border-color: #06b6d4;
+            background: rgba(6, 182, 212, 0.1);
+            transform: scale(1.01);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .upload-area h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-area p {
+            color: #a1a1aa;
+            margin-bottom: 1rem;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+        }
+
+        .supported-formats {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .format-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.3rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            color: #d4d4d8;
+        }
+
+        .format-badge.hevc {
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        /* 비디오 플레이어 영역 */
+        .player-area {
+            display: none;
+            margin-top: 1.5rem;
+        }
+
+        .player-area.show {
+            display: block;
+        }
+
+        .video-container {
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            max-width: 100%;
+        }
+
+        .video-player {
+            width: 100%;
+            max-height: 600px;
+            display: block;
+            background: #000;
+        }
+
+        .video-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+        }
+
+        .video-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: #71717a;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: #06b6d4;
+            font-weight: 600;
+        }
+
+        /* 비디오 컨트롤 */
+        .video-controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .control-btn.active {
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+        }
+
+        /* 변환 옵션 */
+        .convert-options {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+        }
+
+        .option-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .option-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .option-label {
+            display: block;
+            color: #fff;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .option-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .format-select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .format-select:focus {
+            outline: none;
+            border-color: #06b6d4;
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+        }
+
+        .format-select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        /* 액션 버튼 */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .action-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .action-btn.secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: none;
+        }
+
+        .action-btn.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .action-btn.success:hover:not(:disabled) {
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        /* 프로그레스 오버레이 */
+        .progress-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .progress-overlay.show {
+            display: flex;
+        }
+
+        .progress-card {
+            background: rgba(30, 30, 60, 0.95);
+            border-radius: 24px;
+            padding: 3rem;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #06b6d4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-card h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 12px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+
+        .progress-bar .progress {
+            height: 100%;
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            color: #a1a1aa;
+            font-size: 0.9rem;
+        }
+
+        .progress-details {
+            color: #71717a;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* FFmpeg 로딩 상태 */
+        .ffmpeg-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .ffmpeg-status.loading {
+            color: #fbbf24;
+        }
+
+        .ffmpeg-status.ready {
+            color: #10b981;
+        }
+
+        .ffmpeg-status.error {
+            color: #ef4444;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .status-dot.loading {
+            background: #fbbf24;
+        }
+
+        .status-dot.ready {
+            background: #10b981;
+            animation: none;
+        }
+
+        .status-dot.error {
+            background: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 토스트 알림 */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .toast {
+            background: rgba(30, 30, 60, 0.95);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            animation: slideIn 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error { border-left: 4px solid #ef4444; }
+        .toast.info { border-left: 4px solid #06b6d4; }
+        .toast.warning { border-left: 4px solid #fbbf24; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* 푸터 */
+        footer {
+            background: rgba(15, 15, 35, 0.95);
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 3rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        footer p {
+            color: #71717a;
+            font-size: 0.9rem;
+        }
+
+        /* 안내 메시지 */
+        .info-box {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .info-box-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .info-box-content {
+            flex: 1;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            color: #06b6d4;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-box-text {
+            font-size: 0.9rem;
+            color: #a1a1aa;
+            line-height: 1.5;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .tab-nav {
+                flex-direction: column;
+            }
+
+            .video-info-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .option-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .format-select {
+                width: 100%;
+            }
+        }
+
+        /* 슬라이더 스타일 */
+        .quality-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .quality-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .quality-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(6, 182, 212, 0.4);
+        }
+
+        .quality-value {
+            color: #06b6d4;
+            font-weight: 600;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        /* 캔버스 숨기기 (변환용) */
+        #hiddenCanvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <h2><a href="index.html">KAMIC Lab</a></h2>
+            </div>
+            <div class="nav-title">동영상 도구</div>
+            <a href="index.html" class="back-btn">← 홈으로</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- 탭 네비게이션 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="player" onclick="switchTab('player')">
+                ▶️ 동영상 재생
+            </button>
+            <button class="tab-btn" data-tab="convert" onclick="switchTab('convert')">
+                🔄 동영상 변환
+            </button>
+        </div>
+
+        <!-- 동영상 재생 탭 -->
+        <div class="tab-content active" id="playerTab">
+            <div class="section-card">
+                <h3 class="section-title">▶️ 동영상 재생</h3>
+                
+                <div class="info-box">
+                    <span class="info-box-icon">ℹ️</span>
+                    <div class="info-box-content">
+                        <div class="info-box-title">다양한 형식 지원</div>
+                        <div class="info-box-text">
+                            MP4, MOV, AVI, WMV, MKV, FLV 등 다양한 동영상 형식을 재생할 수 있습니다.<br>
+                            브라우저에서 직접 지원하지 않는 형식은 FFmpeg를 통해 변환 후 재생됩니다.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="upload-area" id="playerUploadArea" onclick="document.getElementById('playerFileInput').click()">
+                    <div class="upload-icon">🎬</div>
+                    <h3>동영상을 드래그하거나 클릭하여 업로드</h3>
+                    <p>재생할 동영상 파일을 선택하세요</p>
+                    <button class="upload-btn" onclick="event.stopPropagation();">파일 선택</button>
+                    <div class="supported-formats">
+                        <span class="format-badge">MP4</span>
+                        <span class="format-badge">MOV</span>
+                        <span class="format-badge">AVI</span>
+                        <span class="format-badge">WMV</span>
+                        <span class="format-badge">MKV</span>
+                        <span class="format-badge">FLV</span>
+                        <span class="format-badge">WebM</span>
+                        <span class="format-badge hevc">HEVC/H.265</span>
+                    </div>
+                    <input type="file" id="playerFileInput" accept="video/*,.mkv,.avi,.wmv,.flv,.mov,.mp4,.webm,.m4v,.3gp" style="display: none">
+                </div>
+
+                <div class="player-area" id="playerArea">
+                    <div class="video-container">
+                        <video id="videoPlayer" class="video-player" controls>
+                            브라우저가 동영상 재생을 지원하지 않습니다.
+                        </video>
+                    </div>
+                    
+                    <div class="video-info" id="videoInfo">
+                        <div class="video-info-grid">
+                            <div class="info-item">
+                                <span class="info-label">파일명</span>
+                                <span class="info-value" id="infoFileName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">형식</span>
+                                <span class="info-value" id="infoFormat">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">해상도</span>
+                                <span class="info-value" id="infoResolution">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">재생 시간</span>
+                                <span class="info-value" id="infoDuration">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">파일 크기</span>
+                                <span class="info-value" id="infoSize">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">상태</span>
+                                <span class="info-value" id="infoStatus">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="action-btn secondary" onclick="resetPlayer()">
+                            🗑️ 다른 영상 선택
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 동영상 변환 탭 -->
+        <div class="tab-content" id="convertTab">
+            <div class="section-card">
+                <h3 class="section-title">🔄 동영상 변환</h3>
+                
+                <!-- FFmpeg 상태 -->
+                <div class="ffmpeg-status loading" id="ffmpegStatus">
+                    <span class="status-dot loading"></span>
+                    <span id="ffmpegStatusText">FFmpeg 로딩 중...</span>
+                </div>
+
+                <div class="info-box">
+                    <span class="info-box-icon">💡</span>
+                    <div class="info-box-content">
+                        <div class="info-box-title">범용 형식으로 변환</div>
+                        <div class="info-box-text">
+                            특수한 코덱(HEVC, VP9 등)으로 인코딩된 동영상을 일반 미디어 플레이어에서 재생 가능한 형식으로 변환합니다.<br>
+                            변환은 브라우저에서 직접 처리되며, 서버로 파일이 전송되지 않습니다.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="upload-area" id="convertUploadArea" onclick="document.getElementById('convertFileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <h3>변환할 동영상을 업로드하세요</h3>
+                    <p>다양한 형식의 동영상을 범용 형식으로 변환할 수 있습니다</p>
+                    <button class="upload-btn" onclick="event.stopPropagation();">파일 선택</button>
+                    <div class="supported-formats">
+                        <span class="format-badge">MP4</span>
+                        <span class="format-badge">MOV</span>
+                        <span class="format-badge">AVI</span>
+                        <span class="format-badge">WMV</span>
+                        <span class="format-badge">MKV</span>
+                        <span class="format-badge">FLV</span>
+                        <span class="format-badge">WebM</span>
+                        <span class="format-badge hevc">HEVC/H.265</span>
+                    </div>
+                    <input type="file" id="convertFileInput" accept="video/*,.mkv,.avi,.wmv,.flv,.mov,.mp4,.webm,.m4v,.3gp" style="display: none">
+                </div>
+
+                <div class="player-area" id="convertArea">
+                    <div class="video-info" id="convertVideoInfo">
+                        <div class="video-info-grid">
+                            <div class="info-item">
+                                <span class="info-label">파일명</span>
+                                <span class="info-value" id="convertFileName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">원본 형식</span>
+                                <span class="info-value" id="convertOrigFormat">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">파일 크기</span>
+                                <span class="info-value" id="convertFileSize">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="convert-options">
+                        <div class="option-group">
+                            <label class="option-label">출력 형식</label>
+                            <div class="option-row">
+                                <select class="format-select" id="outputFormat">
+                                    <option value="mp4-h264">MP4 (H.264) - 가장 호환성 높음</option>
+                                    <option value="mp4-h265">MP4 (H.265/HEVC) - 고압축</option>
+                                    <option value="webm-vp9">WebM (VP9) - 웹 최적화</option>
+                                    <option value="avi">AVI - 레거시 호환</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="option-group">
+                            <label class="option-label">품질 설정</label>
+                            <div class="option-row">
+                                <select class="format-select" id="qualityPreset">
+                                    <option value="high">고품질 (파일 크기 큼)</option>
+                                    <option value="medium" selected>중간 품질 (권장)</option>
+                                    <option value="low">저품질 (파일 크기 작음)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="action-btn success" id="convertBtn" onclick="convertVideo()" disabled>
+                            🔄 변환 시작
+                        </button>
+                        <button class="action-btn secondary" onclick="resetConvert()">
+                            🗑️ 초기화
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 프로그레스 오버레이 -->
+    <div class="progress-overlay" id="progressOverlay">
+        <div class="progress-card">
+            <div class="spinner"></div>
+            <h3 id="progressTitle">처리 중...</h3>
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+            <p class="progress-text" id="progressText">0%</p>
+            <p class="progress-details" id="progressDetails"></p>
+        </div>
+    </div>
+
+    <!-- 토스트 컨테이너 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- 숨겨진 캔버스 (비디오 처리용) -->
+    <canvas id="hiddenCanvas"></canvas>
+
+    <footer>
+        <p>&copy; KAMIC Lab. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // 전역 상태
+        let ffmpeg = null;
+        let ffmpegLoaded = false;
+        let currentVideoFile = null;
+        let convertVideoFile = null;
+
+        // 로그인 상태 확인
+        function checkLoginStatus() {
+            let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || 
+                             sessionStorage.getItem('isLoggedIn') === 'true';
+            
+            if (!isLoggedIn) {
+                alert('이 기능을 사용하려면 로그인이 필요합니다.');
+                window.location.href = 'index.html';
+                return false;
+            }
+            return true;
+        }
+
+        // 초기화
+        async function init() {
+            if (!checkLoginStatus()) return;
+            
+            setupPlayerUpload();
+            setupConvertUpload();
+            
+            // FFmpeg 로드
+            loadFFmpeg();
+        }
+
+        // FFmpeg 로드
+        async function loadFFmpeg() {
+            try {
+                const { FFmpeg } = FFmpegWASM;
+                const { fetchFile } = FFmpegUtil;
+                
+                ffmpeg = new FFmpeg();
+                
+                ffmpeg.on('log', ({ message }) => {
+                    console.log(message);
+                });
+                
+                ffmpeg.on('progress', ({ progress, time }) => {
+                    const percent = Math.round(progress * 100);
+                    updateProgress(percent, `변환 중... ${percent}%`);
+                });
+
+                await ffmpeg.load({
+                    coreURL: 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/umd/ffmpeg-core.js',
+                    wasmURL: 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/umd/ffmpeg-core.wasm',
+                });
+                
+                ffmpegLoaded = true;
+                updateFFmpegStatus('ready', 'FFmpeg 준비 완료');
+                document.getElementById('convertBtn').disabled = false;
+                
+            } catch (error) {
+                console.error('FFmpeg 로드 실패:', error);
+                updateFFmpegStatus('error', 'FFmpeg 로드 실패 - 새로고침 후 다시 시도해주세요');
+            }
+        }
+
+        // FFmpeg 상태 업데이트
+        function updateFFmpegStatus(status, text) {
+            const statusEl = document.getElementById('ffmpegStatus');
+            const dotEl = statusEl.querySelector('.status-dot');
+            const textEl = document.getElementById('ffmpegStatusText');
+            
+            statusEl.className = `ffmpeg-status ${status}`;
+            dotEl.className = `status-dot ${status}`;
+            textEl.textContent = text;
+        }
+
+        // 탭 전환
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabName);
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === tabName + 'Tab');
+            });
+        }
+
+        // 플레이어 업로드 설정
+        function setupPlayerUpload() {
+            const uploadArea = document.getElementById('playerUploadArea');
+            const fileInput = document.getElementById('playerFileInput');
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('drag-over');
+            });
+
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) {
+                    handlePlayerFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handlePlayerFile(e.target.files[0]);
+                }
+            });
+        }
+
+        // 플레이어 파일 처리
+        async function handlePlayerFile(file) {
+            const ext = file.name.toLowerCase().split('.').pop();
+            const nativeFormats = ['mp4', 'webm', 'ogg', 'mov'];
+            const needsConversion = !nativeFormats.includes(ext);
+
+            currentVideoFile = file;
+            
+            document.getElementById('infoFileName').textContent = file.name;
+            document.getElementById('infoFormat').textContent = ext.toUpperCase();
+            document.getElementById('infoSize').textContent = formatFileSize(file.size);
+            
+            document.getElementById('playerUploadArea').style.display = 'none';
+            document.getElementById('playerArea').classList.add('show');
+
+            const videoPlayer = document.getElementById('videoPlayer');
+            
+            if (needsConversion && ffmpegLoaded) {
+                // FFmpeg로 변환 필요
+                document.getElementById('infoStatus').textContent = '변환 중...';
+                showToast('브라우저에서 직접 지원하지 않는 형식입니다. 변환 중...', 'warning');
+                
+                try {
+                    showProgress('동영상 변환 중...', 0);
+                    
+                    const { fetchFile } = FFmpegUtil;
+                    await ffmpeg.writeFile('input.' + ext, await fetchFile(file));
+                    
+                    await ffmpeg.exec(['-i', 'input.' + ext, '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'aac', 'output.mp4']);
+                    
+                    const data = await ffmpeg.readFile('output.mp4');
+                    const blob = new Blob([data.buffer], { type: 'video/mp4' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    videoPlayer.src = url;
+                    document.getElementById('infoStatus').textContent = '변환 완료 - 재생 가능';
+                    
+                    hideProgress();
+                    showToast('변환 완료! 재생 가능합니다.', 'success');
+                    
+                } catch (error) {
+                    console.error('변환 오류:', error);
+                    document.getElementById('infoStatus').textContent = '변환 실패';
+                    hideProgress();
+                    showToast('변환 중 오류가 발생했습니다.', 'error');
+                    
+                    // 기본 재생 시도
+                    tryNativePlayback(file, videoPlayer);
+                }
+            } else {
+                // 네이티브 재생 시도
+                tryNativePlayback(file, videoPlayer);
+            }
+            
+            // 비디오 메타데이터 로드
+            videoPlayer.onloadedmetadata = () => {
+                document.getElementById('infoResolution').textContent = 
+                    `${videoPlayer.videoWidth} × ${videoPlayer.videoHeight}`;
+                document.getElementById('infoDuration').textContent = 
+                    formatDuration(videoPlayer.duration);
+            };
+        }
+
+        // 네이티브 재생 시도
+        function tryNativePlayback(file, videoPlayer) {
+            const url = URL.createObjectURL(file);
+            videoPlayer.src = url;
+            
+            videoPlayer.onerror = () => {
+                document.getElementById('infoStatus').textContent = '재생 불가 - 변환 필요';
+                showToast('이 형식은 브라우저에서 직접 재생할 수 없습니다. 변환 탭에서 변환해주세요.', 'warning');
+            };
+            
+            videoPlayer.oncanplay = () => {
+                document.getElementById('infoStatus').textContent = '재생 가능';
+            };
+        }
+
+        // 변환 업로드 설정
+        function setupConvertUpload() {
+            const uploadArea = document.getElementById('convertUploadArea');
+            const fileInput = document.getElementById('convertFileInput');
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('drag-over');
+            });
+
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) {
+                    handleConvertFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleConvertFile(e.target.files[0]);
+                }
+            });
+        }
+
+        // 변환할 파일 처리
+        function handleConvertFile(file) {
+            convertVideoFile = file;
+            
+            const ext = file.name.toLowerCase().split('.').pop();
+            
+            document.getElementById('convertFileName').textContent = file.name;
+            document.getElementById('convertOrigFormat').textContent = ext.toUpperCase();
+            document.getElementById('convertFileSize').textContent = formatFileSize(file.size);
+            
+            document.getElementById('convertUploadArea').style.display = 'none';
+            document.getElementById('convertArea').classList.add('show');
+            
+            if (ffmpegLoaded) {
+                document.getElementById('convertBtn').disabled = false;
+            }
+            
+            showToast('파일이 로드되었습니다. 출력 형식을 선택하고 변환을 시작하세요.', 'success');
+        }
+
+        // 동영상 변환
+        async function convertVideo() {
+            if (!convertVideoFile || !ffmpegLoaded) {
+                showToast('파일을 먼저 선택하고 FFmpeg가 로드될 때까지 기다려주세요.', 'error');
+                return;
+            }
+
+            const outputFormat = document.getElementById('outputFormat').value;
+            const qualityPreset = document.getElementById('qualityPreset').value;
+            
+            showProgress('변환 준비 중...', 0);
+            document.getElementById('convertBtn').disabled = true;
+
+            try {
+                const { fetchFile } = FFmpegUtil;
+                const inputExt = convertVideoFile.name.toLowerCase().split('.').pop();
+                const inputName = 'input.' + inputExt;
+                
+                // 파일 쓰기
+                updateProgress(5, '파일 로딩 중...');
+                await ffmpeg.writeFile(inputName, await fetchFile(convertVideoFile));
+                
+                // 출력 파일명 및 FFmpeg 옵션 설정
+                let outputName, ffmpegArgs;
+                const crfValues = { high: '18', medium: '23', low: '28' };
+                const crf = crfValues[qualityPreset];
+                
+                switch (outputFormat) {
+                    case 'mp4-h264':
+                        outputName = 'output.mp4';
+                        ffmpegArgs = ['-i', inputName, '-c:v', 'libx264', '-crf', crf, '-preset', 'medium', '-c:a', 'aac', '-b:a', '128k', outputName];
+                        break;
+                    case 'mp4-h265':
+                        outputName = 'output.mp4';
+                        ffmpegArgs = ['-i', inputName, '-c:v', 'libx265', '-crf', crf, '-preset', 'medium', '-c:a', 'aac', '-b:a', '128k', outputName];
+                        break;
+                    case 'webm-vp9':
+                        outputName = 'output.webm';
+                        ffmpegArgs = ['-i', inputName, '-c:v', 'libvpx-vp9', '-crf', crf, '-b:v', '0', '-c:a', 'libopus', '-b:a', '128k', outputName];
+                        break;
+                    case 'avi':
+                        outputName = 'output.avi';
+                        ffmpegArgs = ['-i', inputName, '-c:v', 'mpeg4', '-q:v', qualityPreset === 'high' ? '2' : qualityPreset === 'medium' ? '5' : '8', '-c:a', 'mp3', '-b:a', '128k', outputName];
+                        break;
+                    default:
+                        outputName = 'output.mp4';
+                        ffmpegArgs = ['-i', inputName, '-c:v', 'libx264', '-crf', crf, '-preset', 'medium', '-c:a', 'aac', outputName];
+                }
+
+                // 변환 실행
+                updateProgress(10, '변환 시작...');
+                await ffmpeg.exec(ffmpegArgs);
+                
+                // 결과 읽기
+                updateProgress(90, '파일 저장 중...');
+                const data = await ffmpeg.readFile(outputName);
+                
+                // 다운로드
+                const mimeTypes = {
+                    'mp4': 'video/mp4',
+                    'webm': 'video/webm',
+                    'avi': 'video/x-msvideo'
+                };
+                const ext = outputName.split('.').pop();
+                const blob = new Blob([data.buffer], { type: mimeTypes[ext] || 'video/mp4' });
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                const originalName = convertVideoFile.name.replace(/\.[^/.]+$/, '');
+                link.href = url;
+                link.download = `${originalName}_converted.${ext}`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                // 정리
+                await ffmpeg.deleteFile(inputName);
+                await ffmpeg.deleteFile(outputName);
+                
+                hideProgress();
+                showToast('변환이 완료되었습니다! 파일이 다운로드됩니다.', 'success');
+                
+            } catch (error) {
+                console.error('변환 오류:', error);
+                hideProgress();
+                showToast('변환 중 오류가 발생했습니다: ' + error.message, 'error');
+            } finally {
+                document.getElementById('convertBtn').disabled = false;
+            }
+        }
+
+        // 플레이어 초기화
+        function resetPlayer() {
+            currentVideoFile = null;
+            document.getElementById('videoPlayer').src = '';
+            document.getElementById('playerUploadArea').style.display = 'block';
+            document.getElementById('playerArea').classList.remove('show');
+            document.getElementById('playerFileInput').value = '';
+            
+            // 정보 초기화
+            document.getElementById('infoFileName').textContent = '-';
+            document.getElementById('infoFormat').textContent = '-';
+            document.getElementById('infoResolution').textContent = '-';
+            document.getElementById('infoDuration').textContent = '-';
+            document.getElementById('infoSize').textContent = '-';
+            document.getElementById('infoStatus').textContent = '-';
+        }
+
+        // 변환 초기화
+        function resetConvert() {
+            convertVideoFile = null;
+            document.getElementById('convertUploadArea').style.display = 'block';
+            document.getElementById('convertArea').classList.remove('show');
+            document.getElementById('convertFileInput').value = '';
+            
+            // 정보 초기화
+            document.getElementById('convertFileName').textContent = '-';
+            document.getElementById('convertOrigFormat').textContent = '-';
+            document.getElementById('convertFileSize').textContent = '-';
+        }
+
+        // 유틸리티 함수들
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        }
+
+        function formatDuration(seconds) {
+            if (isNaN(seconds)) return '-';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            
+            if (h > 0) {
+                return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function showProgress(title, percent) {
+            document.getElementById('progressTitle').textContent = title;
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressText').textContent = Math.round(percent) + '%';
+            document.getElementById('progressOverlay').classList.add('show');
+        }
+
+        function updateProgress(percent, text) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressText').textContent = text || Math.round(percent) + '%';
+        }
+
+        function hideProgress() {
+            document.getElementById('progressOverlay').classList.remove('show');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'ℹ️';
+            if (type === 'success') icon = '✅';
+            if (type === 'error') icon = '❌';
+            if (type === 'warning') icon = '⚠️';
+
+            toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // 초기화 실행
+        init();
+    </script>
+</body>
+</html>
+
